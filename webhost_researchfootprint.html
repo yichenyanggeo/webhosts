@@ -1139,7 +1139,7 @@
         }, 50);
 
         // ─── Sichuan Plateau ──────────────────────────────────────────────────────────
-        fetch('https://storage.googleapis.com/yyprocessing/CROP_YIELD_ONLINE/research_footprints/the_western_sichuan_plateau.geojson')
+        fetch('https://pub-423fb1f89e9b4adfa05db5e6fe6ffd64.r2.dev/research_footprints/the_western_sichuan_plateau.geojson')
             .then(r => r.json())
             .then(geojson => {
                 const startDate = new Date(geojson.features[0].properties.startDate);
@@ -1194,7 +1194,7 @@
             .catch(err => console.error('GeoJSON error:', err));
 
         // ─── Taihu Lake ───────────────────────────────────────────────────────────────
-        fetch('https://storage.googleapis.com/yyprocessing/CROP_YIELD_ONLINE/research_footprints/taihu_lake.geojson')
+        fetch('https://pub-423fb1f89e9b4adfa05db5e6fe6ffd64.r2.dev/research_footprints/taihu_lake.geojson')
             .then(r => r.json())
             .then(geojson => {
                 let lakeRing = null;
@@ -1287,7 +1287,7 @@
             .catch(err => console.error('Taihu GeoJSON error:', err));
 
         // ─── LST Sharpening Study ─────────────────────────────────────────────────────
-        fetch('https://storage.googleapis.com/yyprocessing/CROP_YIELD_ONLINE/research_footprints/new_haven_county.geojson')
+        fetch('https://pub-423fb1f89e9b4adfa05db5e6fe6ffd64.r2.dev/research_footprints/new_haven_county.geojson')
             .then(r => r.json())
             .then(geojson => {
                 geojson.features.forEach(feature => {
@@ -1340,7 +1340,7 @@
 
         // ─── NH City Humid Heat Study ─────────────────────────────────────────────────
         // FIX 2: Car icon placed on the ground — no leading line, no traveling dot
-        fetch('https://storage.googleapis.com/yyprocessing/CROP_YIELD_ONLINE/research_footprints/new_haven_city.geojson')
+        fetch('https://pub-423fb1f89e9b4adfa05db5e6fe6ffd64.r2.dev/research_footprints/new_haven_city.geojson')
             .then(r => r.json())
             .then(geojson => {
                 geojson.features.forEach(feature => {
@@ -1465,7 +1465,7 @@
         }
         const cornIcon = makeCornIcon();
 
-        fetch('https://storage.googleapis.com/yyprocessing/CROP_YIELD_ONLINE/research_footprints/us_corn_belt.geojson')
+        fetch('https://pub-423fb1f89e9b4adfa05db5e6fe6ffd64.r2.dev/research_footprints/us_corn_belt.geojson')
             .then(r => r.json())
             .then(geojson => {
                 // Point-in-multipolygon helper
@@ -1647,7 +1647,7 @@
         function showGreenspacePanel(id, city, cyclist) {
             document.getElementById('panelContent').innerHTML = `
                 <h2 style="font-size:20px;">Regulation of Humid Heat by Urban Green Space across a Climate Wetness Gradient</h2>
-                <img src="https://storage.googleapis.com/yyprocessing/CROP_YIELD_ONLINE/research_footprints/bikingroute.webp"
+                <img src="https://pub-423fb1f89e9b4adfa05db5e6fe6ffd64.r2.dev/research_footprints/bikingroute.webp"
                      style="width:100%;border-radius:6px;margin:16px 0;cursor:zoom-in;" onclick="openLightbox(this.src)" />
                 <p><strong>This is a green space in ${city}.</strong> We conducted mobile biking measurements across 15 global cities to compare the humid heat of green spaces with their surrounding built-up environments. Results show that the daytime temperature effect is negatively correlated with the humidity effect, leaving no significant impact on humid heat. However, a net reduction in humid heat was observed at night. Furthermore, we found a gradient where both temperature and humidity effects are stronger in drier climates than in wetter ones.</p>
                 <br/>
@@ -1661,7 +1661,7 @@
         function showUAVPanel() {
             document.getElementById('panelContent').innerHTML = `
                 <h2 style="font-size:20px;">Four-band Thermal Mosaicking: A New Method to Process Infrared Thermal Imagery of Urban Landscapes from UAV Flights</h2>
-                <img src="https://storage.googleapis.com/yyprocessing/CROP_YIELD_ONLINE/research_footprints/thermalmosaicking.webp"
+                <img src="https://pub-423fb1f89e9b4adfa05db5e6fe6ffd64.r2.dev/research_footprints/thermalmosaicking.webp"
                      style="width:100%;border-radius:6px;margin:16px 0;cursor:zoom-in;" onclick="openLightbox(this.src)" />
                 <p>To overcome the specific challenges of thermal image mosaicking, where low resolution and weak contrast typically cause stitching errors, I developed a novel method called Four-Band Thermal Mosaicking and tested it in a highly heterogeneous urban landscape featuring a rich mix of vegetation, water, and built surfaces.</p>
                 <br/>
@@ -1674,7 +1674,7 @@
         function showSichuanPanel() {
             document.getElementById('panelContent').innerHTML = `
                 <h2 style="font-size:20px;">Spatiotemporal Variability of Precipitation on the Western Sichuan Plateau</h2>
-                <img src="https://storage.googleapis.com/yyprocessing/CROP_YIELD_ONLINE/research_footprints/sichuan.webp"
+                <img src="https://pub-423fb1f89e9b4adfa05db5e6fe6ffd64.r2.dev/research_footprints/sichuan.webp"
                      style="width:100%;border-radius:6px;margin:16px 0;cursor:zoom-in;" onclick="openLightbox(this.src)" />
                 <p>This study investigated how precipitation patterns across the Western Sichuan Plateau, China, have shifted over three decades, using daily records from 52 meteorological stations distributed across Sichuan Province spanning 1980 to 2012. Precipitation was decomposed into seasonal components and intensity categories, from light rain to heavy storms, and their long-term trends were spatially mapped across this high-altitude terrain.</p>
                 <br/>
@@ -1686,7 +1686,7 @@
         function showTaihuPanel() {
             document.getElementById('panelContent').innerHTML = `
                 <h2 style="font-size:20px;">Diurnal and Seasonal Variations of Thermal Stratification and Vertical Mixing in a Shallow Fresh Water Lake</h2>
-                <img src="https://storage.googleapis.com/yyprocessing/CROP_YIELD_ONLINE/research_footprints/waterstratification.webp"
+                <img src="https://pub-423fb1f89e9b4adfa05db5e6fe6ffd64.r2.dev/research_footprints/waterstratification.webp"
                      style="width:100%;border-radius:6px;margin:16px 0;cursor:zoom-in;" onclick="openLightbox(this.src)" />
                 <p>I investigated the vertical thermal structure of Lake Taihu, a shallow fresh water lake in China. The study reveals that while solar heating creates distinct temperature layers, wind speeds above 3.0 m/s typically trigger full mixing, causing the lake to shift between stratified and mixed states on a daily basis.</p>
                 <br/>
@@ -1699,7 +1699,7 @@
         function showLSTPanel() {
             document.getElementById('panelContent').innerHTML = `
                 <h2 style="font-size:20px;">A Scale-Separating Framework for Fusing Satellite Land Surface Temperature Products</h2>
-                <img src="https://storage.googleapis.com/yyprocessing/CROP_YIELD_ONLINE/research_footprints/sharpenedmodis.webp"
+                <img src="https://pub-423fb1f89e9b4adfa05db5e6fe6ffd64.r2.dev/research_footprints/sharpenedmodis.webp"
                      style="width:100%;border-radius:6px;margin:16px 0;cursor:zoom-in;" onclick="openLightbox(this.src)" />
                 <p>I proposed a framework combining deep learning to fuse satellite Land Surface Temperature (LST) products for high spatial and temporal resolution. By modeling the MODIS-to-Landsat mapping across multiple spatial scales, this method achieved state-of-the-art accuracy in sharpening thermal imagery. This study made a rare attempt to associate prediction error with land-use types; this provides a self-explanatory link between surface characteristics and model performance, ensuring the results are physically interpretable rather than just statistical.</p>
                 <br/>
@@ -1711,7 +1711,7 @@
         function showNHCityPanel() {
             document.getElementById('panelContent').innerHTML = `
                 <h2 style="font-size:20px;">Contributions of Temperature and Humidity to Intra-city Variations in Humid Heat</h2>
-                <img src="https://storage.googleapis.com/yyprocessing/CROP_YIELD_ONLINE/research_footprints/mobileNH.webp"
+                <img src="https://pub-423fb1f89e9b4adfa05db5e6fe6ffd64.r2.dev/research_footprints/mobileNH.webp"
                      style="width:100%;border-radius:6px;margin:16px 0;cursor:zoom-in;" onclick="openLightbox(this.src)" />
                 <p>I investigated the intra-city variations of humid heat (using wet-bulb temperature as a proxy) and how temperature and humidity combined to influence it. I found that built-up neighborhoods consistently experience higher humid heat than others due to less efficient energy dissipation during the day and higher heat release from urban structures at night. My analysis further included comparisons between day and night, warm and cold seasons, and diverse weather scenarios to characterize these variations across time and atmospheric conditions.</p>
                 <br/>
@@ -1723,7 +1723,7 @@
         function showCornBeltPanel() {
             document.getElementById('panelContent').innerHTML = `
                 <h2 style="font-size:20px;">US Corn Belt Monitoring & Yield Forecasting</h2>
-                <img src="https://storage.googleapis.com/yyprocessing/CROP_YIELD_ONLINE/research_footprints/uscornbeltmonitoring.webp"
+                <img src="https://pub-423fb1f89e9b4adfa05db5e6fe6ffd64.r2.dev/research_footprints/uscornbeltmonitoring.webp"
                      style="width:100%;border-radius:6px;margin:16px 0;cursor:zoom-in;" onclick="openLightbox(this.src)" />
 <p>Corn yield forecasts move markets. Every year, substantial sums in commodity trades are made or lost in the weeks before USDA releases its official monthly estimates, and for most of that window, the public is flying blind. Large institutional players manage this uncertainty with proprietary forecast models built on satellite data, weather analytics, and their own internal data pipelines. Farmers, regional co-ops, and smaller traders have more limited access to this kind of intelligence, leaving them more passive in the market and often having to comply with price signals set by larger players.</p>
 <p>This project is an attempt to close that gap. I collect data from open satellite archives, weather reanalysis, and USDA crop progress reports, and apply state-of-the-art published methods to generate county-level corn yield forecasts for the 12 top-producing states in the US Corn Belt, updated throughout the growing season and freely accessible to anyone. I also publish my own national-level corn yield forecast, serving as an independent second signal alongside the official USDA estimates. The goal is twofold: to provide a genuine public good by democratizing early-season yield intelligence, and to benchmark published forecasting methods against each other in a real, operational setting rather than the controlled conditions of academic papers.</p>
