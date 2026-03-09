@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>US Corn Yield Forecasting - Backtest Results</title>
+
+    <!-- Plotly -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Roboto Condensed', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            background: #fafaf8;
+        }
+
+        #header {
+            background: linear-gradient(135deg, #1a5847 0%, #2d7a5f 100%);
+            color: white;
+            padding: 18px 24px;
+            box-shadow: 0 2px 8px rgba(26, 88, 71, 0.15);
+            position: relative;
+        }
+
+        #header h1 {
+            font-size: 23px;
+            font-weight: 400;
+            letter-spacing: -0.3px;
+            margin: 0;
+        }
+
+        #main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        #sidebar {
+            width: 340px;
+            background: #f0f5f3;
+            padding: 24px 20px;
+            border-right: 1px solid #d8e4df;
+            overflow-y: auto;
+        }
+
+        #plot-container {
+            flex: 1;
+            background: white;
+            position: relative;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .section-title {
+            font-size: 15px;
+            font-weight: 400;
+            color: #1a5847;
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #5fa885;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 400;
+            font-size: 15px;
+            color: #1a5847;
+            letter-spacing: -0.1px;
+        }
+
+        /* Custom dropdown */
+        .custom-dropdown {
+            position: relative;
+            width: 100%;
+        }
+
+        .custom-dropdown-button {
+            width: 100%;
+            padding: 11px 40px 11px 14px;
+            border: 2px solid #5fa885;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 400;
+            background: #f8fdfb;
+            color: #1a5847;
+            font-family: 'Roboto Condensed', sans-serif;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .custom-dropdown-button::after {
+            content: '';
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 6px solid #1a5847;
+            transition: transform 0.2s;
+        }
+
+        .custom-dropdown.open .custom-dropdown-button::after {
+            transform: translateY(-50%) rotate(180deg);
+        }
+
+        .custom-dropdown-button:hover {
+            border-color: #1a5847;
+            background: white;
+        }
+
+        .custom-dropdown.open .custom-dropdown-button {
+            border-color: #1a5847;
+            background: white;
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+
+        .custom-dropdown-panel {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            max-height: 320px;
+            overflow-y: auto;
+            background: white;
+            border: 2px solid #1a5847;
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 4px 12px rgba(26, 88, 71, 0.15);
+        }
+
+        .custom-dropdown.open .custom-dropdown-panel {
+            display: block;
+        }
+
+        .custom-dropdown-item {
+            padding: 11px 14px;
+            font-size: 15px;
+            font-weight: 400;
+            color: #2d4a40;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .custom-dropdown-item:hover {
+            background: #f0f5f3;
+        }
+
+        .custom-dropdown-item.selected {
+            background: #f8fdfb;
+            color: #1a5847;
+            font-weight: 500;
+        }
+
+        .info-box {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid #e8ede9;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f5f3;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-row span {
+            font-size: 14px;
+            color: #7a8a84;
+        }
+
+        .info-row strong {
+            font-size: 14px;
+            color: #1a5847;
+            font-weight: 500;
+        }
+
+        .metric-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+
+        .metric-table th {
+            background: #f0f5f3;
+            padding: 6px 4px;
+            text-align: center;
+            font-weight: 500;
+            color: #1a5847;
+            border: 1px solid #e8ede9;
+        }
+
+        .metric-table td {
+            padding: 6px 4px;
+            text-align: center;
+            border: 1px solid #f0f5f3;
+            color: #2d4a40;
+        }
+
+        .metric-table td.month-col {
+            font-weight: 500;
+            color: #1a5847;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+            font-size: 14px;
+        }
+
+        .legend-marker {
+            width: 30px;
+            height: 3px;
+            margin-right: 10px;
+            border-radius: 2px;
+        }
+
+        .legend-circle {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+            border: 2px solid;
+        }
+
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px 40px;
+            background: rgba(26, 88, 71, 0.95);
+            color: white;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 400;
+            z-index: 1000;
+        }
+
+        #loading.hidden {
+            display: none;
+        }
+
+        .coming-soon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .coming-soon-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .coming-soon-title {
+            font-size: 32px;
+            color: #1a5847;
+            font-weight: 500;
+            margin-bottom: 12px;
+        }
+
+        .coming-soon-subtitle {
+            font-size: 16px;
+            color: #7a8a84;
+            line-height: 1.5;
+        }
+
+        .description {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #2d4a40;
+            margin-bottom: 16px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f0f5f3;
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #5fa885;
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #1a5847;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="header">
+        <h1>US CORN YIELD FORECASTING</h1>
+    </div>
+
+    <div id="main-container">
+        <div id="sidebar">
+            <div class="section-title">Year Selection</div>
+
+            <div class="control-group">
+                <label for="year-select">Select Year</label>
+                <div class="custom-dropdown" id="year-dropdown">
+                    <button class="custom-dropdown-button" type="button">Loading years...</button>
+                    <div class="custom-dropdown-panel" id="year-panel"></div>
+                </div>
+            </div>
+
+            <!-- <div class="info-box">
+                <div class="section-title" style="margin-bottom: 12px; border: none;">Legend</div>
+                <div class="legend-item">
+                    <div class="legend-circle" style="background: white; border-color: #1a5847;"></div>
+                    <span style="color: #1a5847;">YY's Forecast</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-circle" style="background: white; border-color: #d4a5a8;"></div>
+                    <span style="color: #d4a5a8;">USDA</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-marker" style="background: #f18f01;"></div>
+                    <span style="color: #f18f01;">Final USDA Yield</span>
+                </div>
+            </div> -->
+
+            <div class="info-box">
+                <div class="section-title" style="margin-bottom: 12px; border: none;">Monthly Performance</div>
+                <div id="performance-metrics">
+                    <div class="info-row">
+                        <span>Select a year to view metrics</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="description">
+                <strong>About this forecast:</strong><br>
+                YY's National Corn Yield Forecast aggregates county-level predictions through production-weighted
+                calibration. The underlying county model integrates MODIS vegetation indices, land surface temperature,
+                and soil properties, with detrending procedures applied to account for technological advancement.
+                Forecasts are generated at 8-day intervals from May through late October. USDA WASDE monthly forecasts
+                (May-November) are included for benchmark comparison.
+            </div>
+        </div>
+
+        <div id="plot-container">
+            <div id="forecast-plot" style="width: 100%; height: 100%;"></div>
+            <div id="loading">Loading data...</div>
+        </div>
+    </div>
+
+    <script>
+        // const GCS_BASE = 'https://storage.googleapis.com/yyprocessing/CROP_YIELD_ONLINE';  // GCS (deprecated)
+        const GCS_BASE = 'https://pub-dfaabd24b761458c8928b8b75124bb9a.r2.dev/Dashboards/national_level';
+
+        let wasdeData = [];
+        let modelData = [];
+        let truthData = [];
+        let currentYear = null;
+
+        // Helper to parse dates
+        function parseDate(dateStr) {
+            return new Date(dateStr);
+        }
+
+        // Get all unique years from all datasets (union), filtered to 2015+
+        function getAllYears() {
+            const wasdeYears = [...new Set(wasdeData.map(d => d.year))];
+            const modelYears = [...new Set(modelData.map(d => d.year))];
+            const truthYears = [...new Set(truthData.map(d => d.year))];
+
+            // Union of all years, filtered to 2015+
+            const allYears = [...new Set([...wasdeYears, ...modelYears, ...truthYears])]
+                .filter(year => year >= 2015);
+
+            return allYears.sort((a, b) => a - b);
+        }
+
+        // Custom dropdown functionality
+        function initCustomDropdown() {
+            const dropdown = document.getElementById('year-dropdown');
+            const button = dropdown.querySelector('.custom-dropdown-button');
+            const panel = dropdown.querySelector('.custom-dropdown-panel');
+
+            button.addEventListener('click', (e) => {
+                e.stopPropagation();
+                dropdown.classList.toggle('open');
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!dropdown.contains(e.target)) {
+                    dropdown.classList.remove('open');
+                }
+            });
+        }
+
+        // Load all data
+        async function loadAllData() {
+            const loading = document.getElementById('loading');
+            loading.classList.remove('hidden');
+            loading.textContent = 'Loading data...';
+
+            try {
+                console.log('Fetching data from GCS...');
+
+                const [wasdeRes, modelRes, truthRes] = await Promise.all([
+                    fetch(`${GCS_BASE}/wasde_forecasts.json?t=${Date.now()}`),
+                    fetch(`${GCS_BASE}/national_forecasts.json?t=${Date.now()}`),
+                    fetch(`${GCS_BASE}/national_yield_truth.json?t=${Date.now()}`)
+                ]);
+
+                console.log('WASDE status:', wasdeRes.status);
+                console.log('Model status:', modelRes.status);
+                console.log('Truth status:', truthRes.status);
+
+                if (!wasdeRes.ok || !modelRes.ok || !truthRes.ok) {
+                    throw new Error('Failed to fetch data. Check if JSON files exist in GCS.');
+                }
+
+                wasdeData = await wasdeRes.json();
+                modelData = await modelRes.json();
+                truthData = await truthRes.json();
+
+                console.log('Loaded WASDE:', wasdeData.length, 'records');
+                console.log('Loaded Model:', modelData.length, 'records');
+                console.log('Loaded Truth:', truthData.length, 'records');
+
+                populateYearSelector();
+                loading.classList.add('hidden');
+
+            } catch (error) {
+                console.error('Error loading data:', error);
+                loading.textContent = 'Error: ' + error.message;
+                loading.style.background = 'rgba(212, 165, 168, 0.95)';
+            }
+        }
+
+        // Populate year dropdown
+        function populateYearSelector() {
+            const years = getAllYears();
+
+            if (years.length === 0) {
+                console.error('No years found in data');
+                return;
+            }
+
+            const maxYear = Math.max(...years);
+
+            // Add all data years + next year for "Coming Soon"
+            const yearsWithFuture = [...years, maxYear + 1].sort((a, b) => b - a);
+
+            const button = document.querySelector('.custom-dropdown-button');
+            const panel = document.getElementById('year-panel');
+
+            panel.innerHTML = yearsWithFuture.map(year =>
+                `<div class="custom-dropdown-item" data-value="${year}">${year}</div>`
+            ).join('');
+
+            // Add click handlers
+            panel.querySelectorAll('.custom-dropdown-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const year = parseInt(item.dataset.value);
+                    currentYear = year;
+                    button.textContent = year;
+
+                    // Update selected state
+                    panel.querySelectorAll('.custom-dropdown-item').forEach(i =>
+                        i.classList.remove('selected'));
+                    item.classList.add('selected');
+
+                    document.getElementById('year-dropdown').classList.remove('open');
+                    updatePlot();
+                });
+            });
+
+            if (yearsWithFuture.length > 0) {
+                currentYear = maxYear;  // Pick latest year with actual data, not "Coming Soon"
+                button.textContent = currentYear;
+
+                // Select the correct item in dropdown (maxYear, not the first item)
+                const itemToSelect = panel.querySelector(`[data-value="${maxYear}"]`);
+                if (itemToSelect) {
+                    itemToSelect.classList.add('selected');
+                }
+
+                updatePlot();
+            }
+        }
+
+        // Calculate monthly performance metrics
+        function calculateMonthlyMetrics(year) {
+            const months = ['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'];
+            const monthNumbers = [5, 6, 7, 8, 9, 10];
+
+            const truth = truthData.find(d => d.year === year);
+            const finalYield = truth ? truth.yield_bu_per_acre : null;
+
+            const metrics = [];
+
+            monthNumbers.forEach((monthNum, idx) => {
+                // Get WASDE for this month
+                const wasdeMonth = wasdeData.find(d =>
+                    d.year === year && new Date(d.forecast_date).getMonth() + 1 === monthNum
+                );
+
+                // Get model forecasts for this month and average them
+                const modelMonth = modelData.filter(d => {
+                    if (d.year !== year) return false;
+                    const date = new Date(d.forecast_date);
+                    return date.getMonth() + 1 === monthNum;
+                });
+
+                const wasdeValue = wasdeMonth ? wasdeMonth.yield_bu_per_acre : null;
+                const modelValue = modelMonth.length > 0
+                    ? modelMonth.reduce((sum, d) => sum + d.yield_bu_per_acre, 0) / modelMonth.length
+                    : null;
+
+                const wasdeError = (wasdeValue && finalYield)
+                    ? Math.abs(wasdeValue - finalYield)
+                    : null;
+                const modelError = (modelValue && finalYield)
+                    ? Math.abs(modelValue - finalYield)
+                    : null;
+
+                metrics.push({
+                    month: months[idx],
+                    wasde: wasdeValue,
+                    model: modelValue,
+                    wasdeError: wasdeError,
+                    modelError: modelError
+                });
+            });
+
+            return { metrics, finalYield };
+        }
+
+        // Update performance metrics display
+        function updateMetrics() {
+            const { metrics, finalYield } = calculateMonthlyMetrics(currentYear);
+            const container = document.getElementById('performance-metrics');
+
+            const truthText = finalYield ? `${finalYield.toFixed(2)} bu/ac` : 'N/A';
+
+            let html = `
+                <div style="margin-bottom: 12px; font-size: 13px;">
+                    <strong>Final USDA Yield:</strong> ${truthText}
+                </div>
+                <table class="metric-table">
+                    <thead>
+                        <tr>
+                            <th>Month</th>
+                            <th>USDA</th>
+                            <th>YY</th>
+                            <th>USDA Err</th>
+                            <th>YY Err</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            metrics.forEach(m => {
+                html += `
+                    <tr>
+                        <td class="month-col">${m.month}</td>
+                        <td>${m.wasde ? m.wasde.toFixed(1) : 'N/A'}</td>
+                        <td>${m.model ? m.model.toFixed(1) : 'N/A'}</td>
+                        <td>${m.wasdeError ? m.wasdeError.toFixed(1) : 'N/A'}</td>
+                        <td>${m.modelError ? m.modelError.toFixed(1) : 'N/A'}</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                    </tbody>
+                </table>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        // Show "Coming Soon" message for future year
+        function showComingSoon() {
+            const plotDiv = document.getElementById('forecast-plot');
+
+            // Clear any existing Plotly plot
+            Plotly.purge(plotDiv);
+
+            // Show coming soon message
+            plotDiv.innerHTML = `
+                <div class="coming-soon">
+                    <div class="coming-soon-icon">🌱</div>
+                    <div class="coming-soon-title">Coming Soon</div>
+                    <div class="coming-soon-subtitle">
+                        Forecast for ${currentYear} will be available<br>
+                        during the growing season
+                    </div>
+                </div>
+            `;
+
+            // Clear metrics
+            document.getElementById('performance-metrics').innerHTML = `
+                <div class="info-row">
+                    <span>Data not yet available</span>
+                </div>
+            `;
+        }
+
+        // Update plot
+        function updatePlot() {
+            console.log('Updating plot for year:', currentYear);
+
+            const years = getAllYears();
+            const maxYear = Math.max(...years);
+
+            // Check if this is future year (Coming Soon)
+            if (currentYear > maxYear) {
+                showComingSoon();
+                return;
+            }
+
+            updateMetrics();
+
+            const wasdeForYear = wasdeData.filter(d => d.year === currentYear);
+            const modelForYear = modelData.filter(d => d.year === currentYear);
+            const truthForYear = truthData.find(d => d.year === currentYear);
+
+            console.log('WASDE points:', wasdeForYear.length);
+            console.log('Model points:', modelForYear.length);
+            console.log('Has truth:', !!truthForYear);
+
+            const traces = [];
+
+            // Collect all values to determine y-axis range
+            const allValues = [];
+
+            // Model forecast trace (only if data exists)
+            if (modelForYear.length > 0) {
+                const modelValues = modelForYear.map(d => d.yield_bu_per_acre);
+                allValues.push(...modelValues);
+
+                traces.push({
+                    x: modelForYear.map(d => parseDate(d.forecast_date)),
+                    y: modelValues,
+                    mode: 'lines+markers',
+                    name: "YY's Forecast",
+                    line: { color: '#1a5847', width: 3 },
+                    marker: { size: 8, color: '#1a5847' },
+                    hovertemplate: '%{x|%b %d}<br>%{y:.2f} bu/ac<extra></extra>'
+                });
+            }
+
+            // WASDE trace (only if data exists)
+            if (wasdeForYear.length > 0) {
+                const wasdeValues = wasdeForYear.map(d => d.yield_bu_per_acre);
+                allValues.push(...wasdeValues);
+
+                traces.push({
+                    x: wasdeForYear.map(d => parseDate(d.forecast_date)),
+                    y: wasdeValues,
+                    mode: 'lines+markers',
+                    name: 'USDA WASDE',
+                    line: { color: '#d4a5a8', width: 3 },
+                    marker: { size: 10, color: '#d4a5a8', symbol: 'square' },
+                    hovertemplate: '%{x|%b %d}<br>%{y:.2f} bu/ac<extra></extra>'
+                });
+            }
+
+            // Ground truth horizontal line (only if data exists)
+            if (truthForYear) {
+                const finalYield = truthForYear.yield_bu_per_acre;
+                allValues.push(finalYield);
+
+                traces.push({
+                    x: [new Date(currentYear, 4, 1), new Date(currentYear, 11, 31)],
+                    y: [finalYield, finalYield],
+                    mode: 'lines',
+                    name: `Final USDA: ${finalYield.toFixed(2)} bu/ac`,
+                    line: { color: '#f18f01', width: 3, dash: 'dash' },
+                    hovertemplate: `Final USDA Yield: ${finalYield.toFixed(2)} bu/ac<extra></extra>`
+                });
+            }
+
+            // If no data at all for this year, show message
+            if (traces.length === 0) {
+                const plotDiv = document.getElementById('forecast-plot');
+                Plotly.purge(plotDiv);
+                plotDiv.innerHTML = `
+                    <div class="coming-soon">
+                        <div class="coming-soon-icon">📊</div>
+                        <div class="coming-soon-title">No Data Available</div>
+                        <div class="coming-soon-subtitle">
+                            No forecast data available for ${currentYear}
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            // Calculate y-axis range: min - 10, max + 10
+            const yMin = Math.min(...allValues) - 10;
+            const yMax = Math.max(...allValues) + 10;
+
+            const layout = {
+                title: {
+                    text: `National Corn Yield Forecast - ${currentYear}`,
+                    font: { size: 30, color: '#1a5847', family: 'Roboto Condensed' }
+                },
+                xaxis: {
+                    title: {
+                        text: 'Date',
+                        font: { size: 16 }
+                    },
+                    type: 'date',
+                    range: [new Date(currentYear, 4, 1), new Date(currentYear, 11, 31)],
+                    gridcolor: '#e8ede9',
+                    tickfont: { size: 14 }
+                },
+                yaxis: {
+                    title: {
+                        text: 'Yield (bu/ac)',
+                        font: { size: 16 }
+                    },
+                    range: [yMin, yMax],
+                    gridcolor: '#e8ede9',
+                    tickfont: { size: 14 }
+                },
+                hovermode: 'closest',
+                showlegend: true,
+                legend: {
+                    x: 0.02,
+                    y: 0.98,
+                    bgcolor: 'rgba(255,255,255,0.8)',
+                    bordercolor: '#d8e4df',
+                    borderwidth: 1,
+                    font: { size: 14 }
+                },
+                plot_bgcolor: '#fafaf8',
+                paper_bgcolor: 'white',
+                font: { family: 'Roboto Condensed' },
+                margin: { t: 60, r: 40, b: 60, l: 70 }
+            };
+
+            const plotDiv = document.getElementById('forecast-plot');
+            plotDiv.innerHTML = ''; // Clear any "Coming Soon" message
+            Plotly.newPlot(plotDiv, traces, layout, { responsive: true });
+        }
+
+        // Initialize
+        initCustomDropdown();
+        loadAllData();
+    </script>
+</body>
+
+</html>

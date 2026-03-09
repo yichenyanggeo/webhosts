@@ -1,0 +1,1750 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Research Map - Yichen Yang</title>
+    <link href="https://cesium.com/downloads/cesiumjs/releases/1.112/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: #ffffff;
+            color: #2c3e37;
+            overflow-x: hidden;
+        }
+
+        #cesiumContainer {
+            width: 100%;
+            height: 80vh;
+            position: relative;
+        }
+
+        .info-panel {
+            position: absolute;
+            top: 40%;
+            left: 85%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.98);
+            border: 2px solid #2d5f3f;
+            border-radius: 8px;
+            padding: 40px;
+            width: 360px;
+            max-width: 600px;
+            max-height: 70vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(45, 95, 63, 0.3);
+            z-index: 1000;
+            display: none;
+        }
+
+        .info-panel.active {
+            display: block;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #2d5f3f;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            font-size: 20px;
+            cursor: pointer;
+            line-height: 1;
+            transition: all 0.3s;
+        }
+
+        .close-btn:hover {
+            background: #1f4d34;
+            transform: rotate(90deg);
+        }
+
+        .info-panel h2 {
+            color: #1f4d34;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+
+        .info-panel h3 {
+            color: #2d5f3f;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .info-panel p {
+            line-height: 1.8;
+            color: #3a4a42;
+            margin-bottom: 15px;
+        }
+
+        #topo-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .content-section {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 80px;
+        }
+
+        h2 {
+            font-size: 42px;
+            font-weight: 700;
+            margin-bottom: 45px;
+            color: #1f4d34;
+            letter-spacing: -1.5px;
+            position: relative;
+            padding-bottom: 16px;
+        }
+
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 80px;
+            height: 3px;
+            background: linear-gradient(90deg, #2d5f3f, #4a7c59);
+        }
+
+        .project-item,
+        .publication-item {
+            margin-bottom: 36px;
+            padding: 32px;
+            padding-left: 38px;
+            background: #f5f9f6;
+            border-left: 3px solid #7ea66d;
+            transition: all 0.3s;
+        }
+
+        .project-item:hover,
+        .publication-item:hover {
+            background: rgba(45, 95, 63, 0.04);
+            transform: translateX(4px);
+        }
+
+        .project-item h3,
+        .publication-item h3 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #1f4d34;
+        }
+
+        .project-item p,
+        .publication-item p {
+            color: #3a4a42;
+            line-height: 1.6;
+        }
+
+
+
+        .year {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #2d5f3f;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+        }
+
+        .lightbox {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 9999;
+            cursor: pointer;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .lightbox.active {
+            display: flex;
+        }
+
+        .lightbox img {
+            max-width: 90%;
+            max-height: 90vh;
+            border-radius: 8px;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .cesium-baseLayerPicker-dropDown {
+            background: rgba(31, 77, 52, 0.95) !important;
+            border: 2px solid #2d5f3f !important;
+            border-radius: 8px !important;
+        }
+
+        .cesium-baseLayerPicker-sectionTitle {
+            color: #a8d8b0 !important;
+            font-family: 'Space Grotesk', sans-serif !important;
+            letter-spacing: 1px !important;
+        }
+
+        .cesium-baseLayerPicker-itemLabel {
+            color: #ffffff !important;
+            font-family: 'Space Grotesk', sans-serif !important;
+        }
+
+        .cesium-baseLayerPicker-item:hover .cesium-baseLayerPicker-itemLabel {
+            color: #a8d8b0 !important;
+        }
+
+        .cesium-baseLayerPicker-selectedItem {
+            background: rgba(45, 95, 63, 0.6) !important;
+            outline: 2px solid #4a7c59 !important;
+            outline-offset: 2px !important;
+            border: none !important;
+            border-radius: 4px !important;
+        }
+
+        .cesium-baseLayerPicker-button {
+            background: rgba(31, 77, 52, 0.85) !important;
+            border: 1px solid #2d5f3f !important;
+            border-radius: 4px !important;
+        }
+
+        #panelContent a {
+            color: #2d5f3f;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        #panelContent a:hover {
+            color: #1f4d34;
+        }
+
+        .project-item,
+        .publication-item {
+            cursor: pointer;
+            position: relative;
+        }
+
+        .project-item::after {
+            content: 'Zoom to Study Area';
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            font-size: 16px;
+            font-family: 'Space Grotesk', sans-serif !important;
+            color: #2d5f3f;
+            opacity: 0;
+            transition: opacity 0.25s;
+            letter-spacing: 0.5px;
+        }
+
+        .project-item:hover::after {
+            opacity: 1;
+        }
+
+        .project-item.no-zoom::after {
+            display: none;
+        }
+
+        .project-item.no-zoom {
+            cursor: default;
+        }
+
+        .project-item p a,
+        .publication-item p a {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            transition: all 0.15s ease;
+            text-decoration: none;
+        }
+
+        .project-item p a:hover,
+        .publication-item p a:hover {
+            background: #2d5f3f;
+            color: #ffffff !important;
+            transform: scale(0.95);
+            text-decoration: none;
+        }
+
+        .project-item p a:active,
+        .publication-item p a:active {
+            transform: scale(0.90);
+            background: #1f4d34;
+        }
+
+        .back-home {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 56px;
+            text-decoration: none;
+            color: #1f4d34;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            padding: 10px 0;
+            border-bottom: 2px solid transparent;
+            transition: border-color 0.2s, color 0.2s;
+        }
+
+        .back-home:hover {
+            color: #2d5f3f;
+            border-bottom-color: #2d5f3f;
+        }
+
+        .back-home-arrow {
+            width: 0;
+            height: 0;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+            border-right: 7px solid #1f4d34;
+            transition: border-right-color 0.2s;
+        }
+
+        .back-home:hover .back-home-arrow {
+            border-right-color: #2d5f3f;
+        }
+    </style>
+</head>
+
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+    <img id="lightboxImg" src="" />
+</div>
+
+<body>
+    <canvas id="topo-bg"></canvas>
+    <div id="cesiumContainer"></div>
+
+    <div class="info-panel" id="infoPanel">
+        <button class="close-btn" onclick="closePanel()">×</button>
+        <div id="panelContent"></div>
+    </div>
+
+    <div class="content-section">
+        <a class="back-home" href="aboutme.html">
+            <span class="back-home-arrow"></span>
+            Back to Home
+        </a>
+        <section>
+            <h2>Spatial Footprints of My Research Projects</h2>
+            <div class="project-item" onclick="zoomToStudy('cornbelt')" title="Zoom to study area">
+                <span class="year">MAY 2025 – PRESENT</span>
+                <h3>US Corn Belt Monitoring & Yield Forecasting</h3>
+                <p>PhD side project for satellite data application in agriculture, Yale University &nbsp;·&nbsp;
+                    <strong><a onclick="event.stopPropagation(); openLink('./corn_forecast.html')"
+                            style="color:#2d5f3f;">[Corn Belt Monitor]</a></strong>
+                    &nbsp;&nbsp;
+                    <strong><a onclick="event.stopPropagation(); openLink('./corn_national.html')"
+                            style="color:#2d5f3f;">[National Yield Forecast]</a></strong>
+                </p>
+            </div>
+            <div class="project-item" onclick="zoomToStudy('nhcity')" title="Zoom to study area">
+                <span class="year">OCT 2022 – NOV 2024</span>
+                <h3>Contributions of Temperature and Humidity to Intra-city Variations in Humid Heat</h3>
+                <p>PhD Research, Yale School of the Environment &nbsp;·&nbsp; <strong><a
+                            onclick="event.stopPropagation();
+                        openLink('https://scholar.google.com/citations?view_op=view_citation&hl=en&user=1WuBRIwAAAAJ&citation_for_view=1WuBRIwAAAAJ:zYLM7Y9cAGgC')"
+                            style="color:#2d5f3f;">[Google Scholar]</a></strong></p>
+            </div>
+            <div class="project-item" onclick="zoomToStudy('biking')" title="Zoom to study area">
+                <span class="year">APR 2019 – NOV 2024</span>
+                <h3>Regulation of Humid Heat by Urban Green Space across a Climate Wetness Gradient</h3>
+                <p>PhD Research, Yale School of the Environment &nbsp;·&nbsp; <strong><a
+                            onclick="event.stopPropagation();
+                        openLink('https://scholar.google.com/citations?view_op=view_citation&hl=en&user=1WuBRIwAAAAJ&citation_for_view=1WuBRIwAAAAJ:IjCSPb-OGe4C')"
+                            style="color:#2d5f3f;">[Google Scholar]</a></strong></p>
+            </div>
+            <div class="project-item" onclick="zoomToStudy('lst')" title="Zoom to study area">
+                <span class="year">MAY 2020 – FEB 2022</span>
+                <h3>A Scale-Separating Framework for Fusing Satellite Land Surface Temperature Products</h3>
+                <p>PhD Research, Yale School of the Environment &nbsp;·&nbsp; <strong><a
+                            onclick="event.stopPropagation();
+                        openLink('https://scholar.google.com/citations?view_op=view_citation&hl=en&user=1WuBRIwAAAAJ&citation_for_view=1WuBRIwAAAAJ:2osOgNQ5qMEC')"
+                            style="color:#2d5f3f;">[Google Scholar]</a></strong></p>
+            </div>
+            <div class="project-item no-zoom">
+                <span class="year">APR 2019 – MAY 2020</span>
+                <h3>Evaluating the Role of Microclimate Change in Urban Heat Island Using Mobile Measurement</h3>
+                <p>Master Thesis, Environmental Science, Yale School of the Environment &nbsp;·&nbsp; <strong><a
+                            onclick="event.stopPropagation(); openLink('https://scholar.google.com/citations?view_op=view_citation&hl=en&user=1WuBRIwAAAAJ&citation_for_view=1WuBRIwAAAAJ:qjMakFHDy7sC')"
+                            style="color:#2d5f3f;">[Google Scholar]</a></strong></p>
+            </div>
+            <div class="project-item" onclick="zoomToStudy('uav')" title="Zoom to study area">
+                <span class="year">SEP 2018 – JUN 2019</span>
+                <h3>Four-band Thermal Mosaicking: A New Method to Process Infrared Thermal Imagery of Urban Landscapes
+                    from UAV Flights</h3>
+                <p>Master Research, Yale School of the Environment &nbsp;·&nbsp; <strong><a
+                            onclick="event.stopPropagation(); openLink('https://scholar.google.com/citations?view_op=view_citation&hl=en&user=1WuBRIwAAAAJ&citation_for_view=1WuBRIwAAAAJ:9yKSN-GCB0IC')"
+                            style="color:#2d5f3f;">[Google Scholar]</a></strong></p>
+            </div>
+            <div class="project-item" onclick="zoomToStudy('taihu')" title="Zoom to study area">
+                <span class="year">SEP 2016 – JUN 2018</span>
+                <h3>Diurnal and Seasonal Variations of Thermal Stratification and Vertical Mixing in a Shallow Fresh
+                    Water Lake</h3>
+                <p>Master Thesis, Environmental Engineering, Nanjing University of Information Science & Technology
+                    &nbsp;·&nbsp; <strong><a
+                            onclick="event.stopPropagation(); openLink('https://scholar.google.com/citations?view_op=view_citation&hl=en&user=1WuBRIwAAAAJ&citation_for_view=1WuBRIwAAAAJ:d1gkVwhDpl0C')"
+                            style="color:#2d5f3f;">[Google Scholar]</a></strong></p>
+            </div>
+            <div class="project-item" onclick="zoomToStudy('sichuan')" title="Zoom to study area">
+                <span class="year">SEP 2014 – JUN 2015</span>
+                <h3>Spatiotemporal Variability of Precipitation on the Western Sichuan Plateau</h3>
+                <p>Undergraduate Thesis, Atmospheric Science, Chengdu University of Information Technology</p>
+            </div>
+        </section>
+        <section>
+            <h2>Other Publications</h2>
+            <div class="publication-item">
+                <span class="year">2024</span>
+                <h3>Variation in the relationship between urban tree canopy and air temperature reduction under a range
+                    of daily weather conditions</h3>
+                <p><strong><a
+                            onclick="openLink('https://scholar.google.com/citations?view_op=view_citation&hl=en&user=1WuBRIwAAAAJ&citation_for_view=1WuBRIwAAAAJ:UeHWp8X0CEIC')"
+                            style="color:#2d5f3f;">[Google Scholar]</a></strong></p>
+            </div>
+            <div class="publication-item">
+                <span class="year">2020</span>
+                <h3>Performance evaluation of a smart mobile air temperature and humidity sensor for characterizing
+                    intracity thermal environment</h3>
+                <p><strong><a
+                            onclick="openLink('https://scholar.google.com/citations?view_op=view_citation&hl=en&user=1WuBRIwAAAAJ&citation_for_view=1WuBRIwAAAAJ:u-x6o8ySG0sC')"
+                            style="color:#2d5f3f;">[Google Scholar]</a></strong></p>
+            </div>
+            <div class="publication-item">
+                <span class="year">2018</span>
+                <h3>Spatiotemporal variability of the near-surface CO2 concentration across an industrial-urban-rural
+                    transect, Nanjing, China</h3>
+                <p><strong><a
+                            onclick="openLink('http://scholar.google.com/citations?view_op=view_citation&hl=en&user=1WuBRIwAAAAJ&citation_for_view=1WuBRIwAAAAJ:u5HHmVD_uO8C')"
+                            style="color:#2d5f3f;">[Google Scholar]</a></strong></p>
+            </div>
+        </section>
+    </div>
+
+    <script src="https://cesium.com/downloads/cesiumjs/releases/1.112/Build/Cesium/Cesium.js"></script>
+    <script>
+
+        function zoomToStudy(id) {
+            clearAllSelections();
+
+            if (id === 'sichuan') {
+                viewer.camera.flyTo({
+                    destination: Cesium.Cartesian3.fromDegrees(101.5, 30.5, 2400000),
+                    duration: 2
+                });
+                if (sichuanEntity) {
+                    selectedEntity = sichuanEntity;
+                    originalMaterial = sichuanEntity.polygon.material;
+                    originalOutlineWidth = sichuanEntity.polygon.outlineWidth;
+                    originalOutlineColor = sichuanEntity.polygon.outlineColor;
+                    sichuanEntity.polygon.material = Cesium.Color.fromCssColorString('#ffdd00').withAlpha(0.8);
+                    sichuanEntity.polygon.outlineWidth = 4;
+                    sichuanEntity.polygon.outlineColor = Cesium.Color.fromCssColorString('#ffdd00').withAlpha(0.9);
+                }
+                showSichuanPanel();
+            }
+            else if (id === 'taihu') {
+                viewer.camera.flyTo({
+                    destination: Cesium.Cartesian3.fromDegrees(120.22, 31.20, 300000),
+                    duration: 2
+                });
+                if (taihuEntity) {
+                    selectedEntity = taihuEntity;
+                    originalMaterial = taihuEntity.polygon.material;
+                    originalOutlineWidth = taihuEntity.polygon.outlineWidth;
+                    originalOutlineColor = taihuEntity.polygon.outlineColor;
+                    taihuEntity.polygon.material = Cesium.Color.fromCssColorString('#ffdd00').withAlpha(0.5);
+                    taihuEntity.polygon.outlineWidth = 4;
+                    taihuEntity.polygon.outlineColor = Cesium.Color.fromCssColorString('#ffdd00').withAlpha(0.9);
+                }
+                showTaihuPanel();
+            }
+            else if (id === 'uav') {
+                // Drone sits at 80,000m — camera at 250,000m shows full pin + drone clearly
+                viewer.camera.flyTo({
+                    destination: Cesium.Cartesian3.fromDegrees(uavPoint.lon + 0.04, uavPoint.lat + 0.02, 120000),
+                    orientation: {
+                        heading: Cesium.Math.toRadians(0),
+                        pitch: Cesium.Math.toRadians(-90),
+                        roll: 0
+                    },
+                    duration: 2
+                });
+                if (droneEntity) {
+                    selectedBillboard = droneEntity;
+                    originalBillboardColor = Cesium.Color.fromCssColorString('#ff4500').clone();
+                    droneEntity.billboard.color = Cesium.Color.fromCssColorString('#ffdd00');
+                }
+                showUAVPanel();
+            }
+            else if (id === 'lst') {
+                viewer.camera.flyTo({
+                    destination: Cesium.Cartesian3.fromDegrees(-72.921, 0, 15524816),
+                    orientation: {
+                        heading: Cesium.Math.toRadians(0),
+                        pitch: Cesium.Math.toRadians(-66),
+                        roll: 0
+                    },
+                    duration: 2
+                });
+                if (lstEntity) {
+                    selectedBillboard = lstEntity;
+                    originalBillboardColor = Cesium.Color.WHITE.clone();
+                    lstEntity.billboard.color = Cesium.Color.fromCssColorString('#ffdd00');
+                }
+                showLSTPanel();
+            }
+            else if (id === 'biking') {
+                viewer.camera.flyTo({
+                    destination: Cesium.Cartesian3.fromDegrees(-72.96098, 41.34069, 80000),
+                    duration: 2
+                });
+                if (bikingEntity) {
+                    selectedBillboard = bikingEntity;
+                    originalBillboardColor = Cesium.Color.WHITE.clone();
+                    bikingEntity.billboard.color = Cesium.Color.fromCssColorString('#ffdd00');
+                }
+                const info = greenspaceInfo[54];
+                if (info) showGreenspacePanel(54, info.city, info.cyclist);
+            }
+            else if (id === 'nhcity') {
+                viewer.camera.flyTo({
+                    destination: Cesium.Cartesian3.fromDegrees(-72.921, 41.30, 30000),
+                    duration: 2
+                });
+                if (nhcityPolygonEntity) {
+                    nhcityPolygonEntity.polygon.material = Cesium.Color.fromCssColorString('#ffdd00').withAlpha(0.35);
+                    nhcityPolygonEntity.polygon.outlineWidth = 4;
+                    nhcityPolygonEntity.polygon.outlineColor = Cesium.Color.fromCssColorString('#ffdd00').withAlpha(0.9);
+                }
+                if (nhcityBillboardEntity) {
+                    nhcityBillboardEntity.billboard.color = Cesium.Color.fromCssColorString('#ffdd00');
+                }
+                nhcitySelected = true;
+                showNHCityPanel();
+            }
+            else if (id === 'cornbelt') {
+                viewer.camera.flyTo({
+                    destination: Cesium.Cartesian3.fromDegrees(-95, 42, 3500000),
+                    duration: 2
+                });
+                if (cornbeltEntity) {
+                    cornbeltEntity.polygon.material = Cesium.Color.fromCssColorString('#ffdd00').withAlpha(0.45);
+                    cornbeltEntity.polygon.outlineWidth = 4;
+                    cornbeltEntity.polygon.outlineColor = Cesium.Color.fromCssColorString('#ffdd00').withAlpha(0.9);
+                }
+                showCornBeltPanel();
+            }
+        }
+
+        // ─── Open link safely (bypasses iframe CSP blocking) ─────────────────────────
+        function openLink(url) {
+            var a = document.createElement('a');
+            a.href = url;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        // ─── Lightbox ────────────────────────────────────────────────────────────────
+        function openLightbox(src) {
+            document.getElementById('lightboxImg').src = src;
+            document.getElementById('lightbox').classList.add('active');
+        }
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.remove('active');
+        }
+
+        // ─── Topographic Background ───────────────────────────────────────────────────
+        (function () {
+            const canvas = document.getElementById('topo-bg');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            function hash(x, y) {
+                let n = x * 374761393 + y * 668265263;
+                n = Math.imul(n ^ (n >>> 13), 1274126177);
+                return ((n ^ (n >>> 16)) >>> 0) / 0xffffffff;
+            }
+            function smoothNoise(x, y) {
+                const ix = Math.floor(x), iy = Math.floor(y);
+                const fx = x - ix, fy = y - iy;
+                const ux = fx * fx * (3 - 2 * fx), uy = fy * fy * (3 - 2 * fy);
+                const a = hash(ix, iy), b = hash(ix + 1, iy);
+                const c = hash(ix, iy + 1), d = hash(ix + 1, iy + 1);
+                return a + (b - a) * ux + (c - a) * uy + (a - b - c + d) * ux * uy;
+            }
+            function fractalNoise(x, y) {
+                let v = 0, amp = 1, freq = 1, total = 0;
+                for (let i = 0; i < 6; i++) {
+                    v += smoothNoise(x * freq, y * freq) * amp;
+                    total += amp; amp *= 0.52; freq *= 2.1;
+                }
+                return v / total;
+            }
+            const GRID = 2;
+            const cols = Math.ceil(canvas.width / GRID) + 2;
+            const rows = Math.ceil(canvas.height / GRID) + 2;
+            const SCALE = 0.018;
+            const field = Array.from({ length: rows }, (_, r) =>
+                Array.from({ length: cols }, (_, c) => fractalNoise(c * SCALE, r * SCALE))
+            );
+            function interp(a, b, level) {
+                if (Math.abs(b - a) < 1e-10) return 0.5;
+                return Math.max(0, Math.min(1, (level - a) / (b - a)));
+            }
+            function getSegments(tl, tr, br, bl, level, x0, y0) {
+                const idx = (tl > level ? 8 : 0) | (tr > level ? 4 : 0) | (br > level ? 2 : 0) | (bl > level ? 1 : 0);
+                if (idx === 0 || idx === 15) return [];
+                const top = { x: x0 + interp(tl, tr, level) * GRID, y: y0 };
+                const right = { x: x0 + GRID, y: y0 + interp(tr, br, level) * GRID };
+                const bottom = { x: x0 + interp(bl, br, level) * GRID, y: y0 + GRID };
+                const left = { x: x0, y: y0 + interp(tl, bl, level) * GRID };
+                const T = top, R = right, B = bottom, L = left;
+                const cases = { 1: [[L, B]], 2: [[B, R]], 3: [[L, R]], 4: [[T, R]], 5: [[T, L], [B, R]], 6: [[T, B]], 7: [[T, L]], 8: [[T, L]], 9: [[T, B]], 10: [[T, R], [L, B]], 11: [[T, R]], 12: [[L, R]], 13: [[B, R]], 14: [[L, B]] };
+                return cases[idx] || [];
+            }
+            const levels = [];
+            for (let l = 0.08; l < 0.95; l += 0.02) levels.push(l);
+            levels.forEach((level, li) => {
+                const isMajor = li % 5 === 0;
+                ctx.strokeStyle = '#2d5f3f';
+                ctx.globalAlpha = isMajor ? 0.14 : 0.07;
+                ctx.lineWidth = isMajor ? 1.4 : 0.7;
+                ctx.beginPath();
+                for (let r = 0; r < rows - 1; r++) {
+                    for (let c = 0; c < cols - 1; c++) {
+                        const segs = getSegments(field[r][c], field[r][c + 1], field[r + 1][c + 1], field[r + 1][c], level, c * GRID, r * GRID);
+                        segs.forEach(([p1, p2]) => { ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); });
+                    }
+                }
+                ctx.stroke();
+            });
+            ctx.globalAlpha = 1;
+        })();
+
+        // ─── Cesium Setup ─────────────────────────────────────────────────────────────
+        Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyN2JjZWI4OC1lMzNjLTQ3MGMtOWJkOC1jNDc5MDE4ZjJjOTUiLCJpZCI6MzkyNjc5LCJpYXQiOjE3NzE2NjA5ODN9.92NfbOt9_dE-mzQD37d89KQzVcVW074iDdiq3UJXGPg';
+
+        const satelliteModel = new Cesium.ProviderViewModel({
+            name: 'Satellite',
+            iconUrl: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/2/1/2',
+            tooltip: 'Esri World Imagery',
+            creationFunction: () => new Cesium.UrlTemplateImageryProvider({
+                url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+                credit: 'Esri World Imagery'
+            })
+        });
+        const streetModel = new Cesium.ProviderViewModel({
+            name: 'Street Map',
+            iconUrl: Cesium.buildModuleUrl('Widgets/Images/ImageryProviders/openStreetMap.png'),
+            tooltip: 'OpenStreetMap',
+            creationFunction: () => new Cesium.OpenStreetMapImageryProvider({
+                url: 'https://tile.openstreetmap.org/',
+                credit: 'OpenStreetMap contributors'
+            })
+        });
+
+        const viewer = new Cesium.Viewer('cesiumContainer', {
+            baseLayerPicker: true, geocoder: false, homeButton: false,
+            sceneModePicker: false, timeline: false, animation: false,
+            navigationHelpButton: false, fullscreenButton: false,
+            infoBox: false, selectionIndicator: false,
+            imageryProviderViewModels: [satelliteModel, streetModel],
+            selectedImageryProviderViewModel: satelliteModel,
+            terrainProviderViewModels: [], selectedTerrainProviderViewModel: undefined
+        });
+
+        viewer.camera.setView({
+            destination: Cesium.Cartesian3.fromDegrees(-72, 41, 20000000)
+        });
+
+
+        // ─── Selection State ──────────────────────────────────────────────────────────
+        let sichuanEntity = null;
+        let taihuEntity = null;
+        let lstEntity = null;
+        let bikingEntity = null;
+
+        let selectedEntity = null, originalMaterial = null, originalOutlineWidth = null, originalOutlineColor = null;
+        let selectedBillboard = null, originalBillboardColor = null;
+        // NH City stores BOTH polygon + billboard as one unified selection
+        let nhcityPolygonEntity = null, nhcityBillboardEntity = null; // set at load time
+        let nhcityOriginalMaterial = null, nhcityOriginalOutlineWidth = null, nhcityOriginalOutlineColor = null;
+        let nhcityOriginalBillboardColor = null;
+        let nhcitySelected = false;
+
+        // Corn Belt polygon entity reference
+        let cornbeltEntity = null;
+        let cornbeltOriginalMaterial = null, cornbeltOriginalOutlineWidth = null, cornbeltOriginalOutlineColor = null;
+
+        function clearAllSelections() {
+            if (selectedEntity && originalMaterial) {
+                selectedEntity.polygon.material = originalMaterial;
+                selectedEntity.polygon.outlineWidth = originalOutlineWidth;
+                selectedEntity.polygon.outlineColor = originalOutlineColor;
+                selectedEntity = null; originalMaterial = null;
+            }
+            if (selectedBillboard && originalBillboardColor) {
+                selectedBillboard.billboard.color = originalBillboardColor;
+                selectedBillboard = null; originalBillboardColor = null;
+            }
+            if (nhcitySelected) {
+                if (nhcityPolygonEntity && nhcityOriginalMaterial) {
+                    nhcityPolygonEntity.polygon.material = nhcityOriginalMaterial;
+                    nhcityPolygonEntity.polygon.outlineWidth = nhcityOriginalOutlineWidth;
+                    nhcityPolygonEntity.polygon.outlineColor = nhcityOriginalOutlineColor;
+                }
+                if (nhcityBillboardEntity && nhcityOriginalBillboardColor) {
+                    nhcityBillboardEntity.billboard.color = nhcityOriginalBillboardColor;
+                }
+                nhcitySelected = false;
+            }
+            if (cornbeltEntity && cornbeltOriginalMaterial) {
+                cornbeltEntity.polygon.material = cornbeltOriginalMaterial;
+                cornbeltEntity.polygon.outlineWidth = cornbeltOriginalOutlineWidth;
+                cornbeltEntity.polygon.outlineColor = cornbeltOriginalOutlineColor;
+            }
+        }
+
+        // ─── Bicycle Icon ─────────────────────────────────────────────────────────────
+        function makeBicycleIcon(hexColor) {
+            const c = document.createElement('canvas');
+            c.width = 64; c.height = 64;
+            const ctx = c.getContext('2d');
+            ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+            function drawBike() {
+                ctx.beginPath(); ctx.arc(16, 40, 10, 0, Math.PI * 2); ctx.stroke();
+                ctx.beginPath(); ctx.arc(48, 40, 10, 0, Math.PI * 2); ctx.stroke();
+                [[32, 40, 16, 40], [32, 40, 48, 40], [32, 40, 27, 20], [27, 20, 42, 22], [32, 40, 42, 22], [42, 22, 48, 40]].forEach(([x1, y1, x2, y2]) => {
+                    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+                });
+                ctx.beginPath(); ctx.moveTo(38, 20); ctx.lineTo(46, 20); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(23, 19); ctx.lineTo(31, 19); ctx.stroke();
+                [[16, 40], [48, 40], [32, 40]].forEach(([x, y]) => {
+                    ctx.beginPath(); ctx.arc(x, y, 2.5, 0, Math.PI * 2); ctx.fill();
+                });
+            }
+            ctx.strokeStyle = hexColor; ctx.fillStyle = hexColor;
+            ctx.lineWidth = 4; ctx.shadowColor = hexColor; ctx.shadowBlur = 20; ctx.globalAlpha = 0.35;
+            drawBike();
+            ctx.lineWidth = 3; ctx.shadowBlur = 12; ctx.globalAlpha = 0.6;
+            drawBike();
+            ctx.lineWidth = 1.8; ctx.shadowBlur = 4; ctx.globalAlpha = 1;
+            ctx.strokeStyle = '#ffffff'; ctx.fillStyle = '#ffffff'; ctx.shadowColor = hexColor;
+            drawBike();
+            return c.toDataURL();
+        }
+
+        // ─── Drone Icon ───────────────────────────────────────────────────────────────
+        // Static base rendered ONCE — body, arms, guard rings (no shadow on body = no flashing)
+        const droneStaticCanvas = (() => {
+            const c = document.createElement('canvas');
+            c.width = 64; c.height = 64;
+            const ctx = c.getContext('2d');
+            ctx.strokeStyle = '#ffffff'; ctx.fillStyle = '#ffffff';
+            ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+            // Body (no shadow)
+            ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.roundRect(26, 26, 12, 12, 3); ctx.fill(); ctx.stroke();
+            // Arms
+            ctx.lineWidth = 3.5;
+            ctx.beginPath(); ctx.moveTo(27, 27); ctx.quadraticCurveTo(20, 20, 15, 15); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(37, 27); ctx.quadraticCurveTo(44, 20, 49, 15); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(27, 37); ctx.quadraticCurveTo(20, 44, 15, 49); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(37, 37); ctx.quadraticCurveTo(44, 44, 49, 49); ctx.stroke();
+            // Guard rings (static, drawn once)
+            [[14, 14], [50, 14], [14, 50], [50, 50]].forEach(([cx, cy]) => {
+                ctx.save(); ctx.translate(cx, cy);
+                ctx.lineWidth = 1.8; ctx.globalAlpha = 0.85;
+                ctx.beginPath(); ctx.arc(0, 0, 10, 0, Math.PI * 2); ctx.stroke();
+                ctx.globalAlpha = 1; ctx.restore();
+            });
+            return c;
+        })();
+
+        // Only rotating blades are redrawn each frame — composited on top of static base
+        let droneRotorAngle = 0;
+        function makeDroneIcon(angle) {
+            const c = document.createElement('canvas');
+            c.width = 64; c.height = 64;
+            const ctx = c.getContext('2d');
+            // Composite static base
+            ctx.drawImage(droneStaticCanvas, 0, 0);
+            // Rotating blades only
+            ctx.strokeStyle = '#ffffff'; ctx.fillStyle = '#ffffff'; ctx.lineCap = 'round';
+            [[14, 14], [50, 14], [14, 50], [50, 50]].forEach(([cx, cy], ri) => {
+                const a = ri % 2 === 0 ? angle : -angle;
+                ctx.save(); ctx.translate(cx, cy);
+                // Rotor blur disc
+                ctx.globalAlpha = 0.14;
+                ctx.beginPath(); ctx.arc(0, 0, 9, 0, Math.PI * 2); ctx.fill();
+                ctx.globalAlpha = 1;
+                // Blade 1
+                ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.moveTo(Math.cos(a) * -9, Math.sin(a) * -9); ctx.lineTo(Math.cos(a) * 9, Math.sin(a) * 9); ctx.stroke();
+                // Blade 2
+                const a2 = a + Math.PI / 2;
+                ctx.beginPath(); ctx.moveTo(Math.cos(a2) * -9, Math.sin(a2) * -9); ctx.lineTo(Math.cos(a2) * 9, Math.sin(a2) * 9); ctx.stroke();
+                // Hub dot
+                ctx.beginPath(); ctx.arc(0, 0, 2.5, 0, Math.PI * 2); ctx.fill();
+                ctx.restore();
+            });
+            return c.toDataURL();
+        }
+        let droneIconDataUrl = makeDroneIcon(0);
+
+        // ─── Satellite Icon ───────────────────────────────────────────────────────────
+        function makeSatelliteIcon() {
+            const c = document.createElement('canvas');
+            c.width = 80; c.height = 80;
+            const ctx = c.getContext('2d');
+            const col = '#ffe066';
+            ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+            function draw() {
+                ctx.beginPath(); ctx.roundRect(30, 28, 20, 24, 3); ctx.stroke(); ctx.fill();
+                ctx.beginPath(); ctx.rect(4, 33, 22, 14); ctx.stroke();
+                ctx.beginPath(); ctx.rect(54, 33, 22, 14); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(15, 33); ctx.lineTo(15, 47); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(65, 33); ctx.lineTo(65, 47); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(26, 40); ctx.lineTo(30, 40); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(50, 40); ctx.lineTo(54, 40); ctx.stroke();
+                ctx.beginPath(); ctx.arc(40, 24, 7, Math.PI, 0); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(40, 17); ctx.lineTo(40, 28); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(40, 52); ctx.lineTo(40, 60); ctx.stroke();
+                ctx.beginPath(); ctx.arc(40, 60, 2, 0, Math.PI * 2); ctx.fill();
+            }
+            ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = 4; ctx.shadowColor = col; ctx.shadowBlur = 18; ctx.globalAlpha = 0.3; draw();
+            ctx.lineWidth = 3; ctx.shadowBlur = 10; ctx.globalAlpha = 0.55; draw();
+            ctx.lineWidth = 1.8; ctx.shadowBlur = 3; ctx.globalAlpha = 1;
+            ctx.strokeStyle = '#ffffff'; ctx.fillStyle = 'rgba(255,255,255,0.08)'; ctx.shadowColor = col; draw();
+            return c.toDataURL();
+        }
+        const satelliteIcon = makeSatelliteIcon();
+
+        // ─── Car-on-Route Icon ────────────────────────────────────────────────────────
+        // FIX 1: Redesigned to clearly show a car travelling along a route/road
+        function makeCarRouteIcon() {
+            const c = document.createElement('canvas');
+            c.width = 80; c.height = 80;
+            const ctx = c.getContext('2d');
+            const col = '#cc44ff';
+            ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+
+            function draw() {
+                // Road / route line — dashed horizontal path car travels along
+                ctx.save();
+                ctx.setLineDash([5, 4]);
+                ctx.lineWidth = 2.5;
+                ctx.beginPath(); ctx.moveTo(4, 56); ctx.lineTo(76, 56); ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.restore();
+
+                // Arrowhead at right end of road (direction of travel)
+                ctx.beginPath();
+                ctx.moveTo(70, 51); ctx.lineTo(78, 56); ctx.lineTo(70, 61);
+                ctx.stroke();
+
+                // Car body (side-profile view) sitting on the road
+                // Cabin top
+                ctx.beginPath();
+                ctx.moveTo(22, 48); ctx.lineTo(28, 36); ctx.lineTo(52, 36); ctx.lineTo(58, 48); ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+                // Lower body / chassis
+                ctx.beginPath();
+                ctx.roundRect(16, 46, 48, 12, 3);
+                ctx.fill();
+                ctx.stroke();
+                // Windshield (front)
+                ctx.save();
+                ctx.globalAlpha *= 0.35;
+                ctx.beginPath(); ctx.moveTo(51, 38); ctx.lineTo(57, 47); ctx.lineTo(47, 47); ctx.lineTo(51, 38); ctx.closePath(); ctx.fill();
+                ctx.restore();
+                // Windows (rear)
+                ctx.save();
+                ctx.globalAlpha *= 0.35;
+                ctx.beginPath(); ctx.roundRect(30, 38, 16, 9, 2); ctx.fill();
+                ctx.restore();
+                // Front wheel
+                ctx.beginPath(); ctx.arc(54, 58, 7, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(54, 58, 4, 0, Math.PI * 2); ctx.stroke();
+                // Rear wheel
+                ctx.beginPath(); ctx.arc(26, 58, 7, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(26, 58, 4, 0, Math.PI * 2); ctx.stroke();
+                // Headlight
+                ctx.beginPath(); ctx.ellipse(64, 50, 3, 2, 0, 0, Math.PI * 2); ctx.fill();
+                // Speed lines (motion)
+                ctx.save();
+                ctx.setLineDash([3, 3]);
+                ctx.lineWidth = 1.5;
+                ctx.beginPath(); ctx.moveTo(4, 42); ctx.lineTo(14, 42); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(4, 46); ctx.lineTo(12, 46); ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.restore();
+            }
+
+            // Outer glow
+            ctx.strokeStyle = col; ctx.fillStyle = col;
+            ctx.lineWidth = 3.5; ctx.shadowColor = col; ctx.shadowBlur = 16; ctx.globalAlpha = 0.3; draw();
+            // Mid glow
+            ctx.lineWidth = 2.5; ctx.shadowBlur = 8; ctx.globalAlpha = 0.55; draw();
+            // Sharp white core
+            ctx.lineWidth = 1.6; ctx.shadowBlur = 3; ctx.globalAlpha = 1;
+            ctx.strokeStyle = '#ffffff'; ctx.fillStyle = 'rgba(255,255,255,0.15)'; ctx.shadowColor = col; draw();
+
+            return c.toDataURL();
+        }
+        const carRouteIcon = makeCarRouteIcon();
+
+        // ─── Traveling Dot ────────────────────────────────────────────────────────────
+        function addTravelingDot(lon, lat, maxHeight, hexColor) {
+            const period = 1600 + Math.random() * 1800;
+            const offset = Math.random();
+            const color = Cesium.Color.fromCssColorString(hexColor);
+            viewer.entities.add({
+                position: new Cesium.CallbackProperty(() => {
+                    const t = ((Date.now() / period) + offset) % 1;
+                    return Cesium.Cartesian3.fromDegrees(lon, lat, t * maxHeight);
+                }, false),
+                point: {
+                    pixelSize: 4, color: color,
+                    outlineColor: Cesium.Color.WHITE.withAlpha(0.6), outlineWidth: 1,
+                    disableDepthTestDistance: Number.POSITIVE_INFINITY,
+                    scaleByDistance: new Cesium.NearFarScalar(100000, 1.2, 5000000, 0.4)
+                }
+            });
+        }
+
+        // ─── Sonar Ping Ring ──────────────────────────────────────────────────────────
+        function addSonarRing(lon, lat, hexColor, phaseOffset) {
+            const color = Cesium.Color.fromCssColorString(hexColor);
+            const period = 3200;
+            const t0 = Date.now() - phaseOffset * period;
+            viewer.entities.add({
+                position: Cesium.Cartesian3.fromDegrees(lon, lat, 100),
+                ellipse: {
+                    semiMajorAxis: new Cesium.CallbackProperty(() => (((Date.now() - t0) % period) / period) * 60000, false),
+                    semiMinorAxis: new Cesium.CallbackProperty(() => (((Date.now() - t0) % period) / period) * 60000, false),
+                    material: new Cesium.ColorMaterialProperty(Cesium.Color.TRANSPARENT),
+                    outline: true,
+                    outlineColor: new Cesium.CallbackProperty(() => {
+                        const t = ((Date.now() - t0) % period) / period;
+                        return color.withAlpha(Math.max(0, (1 - t) * 0.35));
+                    }, false),
+                    outlineWidth: 1, height: 100
+                }
+            });
+            const t1 = t0 - period * 0.5;
+            viewer.entities.add({
+                position: Cesium.Cartesian3.fromDegrees(lon, lat, 100),
+                ellipse: {
+                    semiMajorAxis: new Cesium.CallbackProperty(() => (((Date.now() - t1) % period) / period) * 60000, false),
+                    semiMinorAxis: new Cesium.CallbackProperty(() => (((Date.now() - t1) % period) / period) * 60000, false),
+                    material: new Cesium.ColorMaterialProperty(Cesium.Color.TRANSPARENT),
+                    outline: true,
+                    outlineColor: new Cesium.CallbackProperty(() => {
+                        const t = ((Date.now() - t1) % period) / period;
+                        return color.withAlpha(Math.max(0, (1 - t) * 0.25));
+                    }, false),
+                    outlineWidth: 1, height: 100
+                }
+            });
+        }
+
+        // ─── Data ─────────────────────────────────────────────────────────────────────
+        const greenspaces = [
+            { id: 1, lat: 37.68753, lon: -122.16093 }, { id: 2, lat: 37.69412, lon: -122.14605 }, { id: 3, lat: 37.67819, lon: -122.13854 },
+            { id: 4, lat: 34.22348, lon: -118.57187 }, { id: 5, lat: 34.27634, lon: -118.55539 }, { id: 6, lat: 34.27618, lon: -118.54913 },
+            { id: 7, lat: 34.25078, lon: -118.54999 }, { id: 8, lat: 34.25439, lon: -118.53283 }, { id: 9, lat: 34.24359, lon: -118.52696 },
+            { id: 10, lat: 34.26000, lon: -118.52682 }, { id: 11, lat: 37.76896, lon: -122.48203 }, { id: 12, lat: 37.74883, lon: -122.49788 },
+            { id: 13, lat: 37.78781, lon: -122.48104 }, { id: 14, lat: 37.83703, lon: -122.48347 }, { id: 15, lat: 40.23585, lon: -111.64760 },
+            { id: 16, lat: 40.23427, lon: -111.64482 }, { id: 17, lat: 40.24702, lon: -111.63991 }, { id: 18, lat: 41.71728, lon: -111.84887 },
+            { id: 19, lat: 41.72306, lon: -111.84638 }, { id: 20, lat: 41.76893, lon: -111.84013 }, { id: 21, lat: 41.72655, lon: -111.84324 },
+            { id: 22, lat: 41.77799, lon: -111.83065 }, { id: 23, lat: 41.77497, lon: -111.82844 }, { id: 24, lat: 41.76806, lon: -111.82694 },
+            { id: 25, lat: 41.79624, lon: -111.82697 }, { id: 26, lat: 41.78489, lon: -111.82264 }, { id: 27, lat: 41.74175, lon: -111.82307 },
+            { id: 28, lat: 41.77310, lon: -111.82111 }, { id: 29, lat: 51.52832, lon: -0.22774 }, { id: 30, lat: 51.50700, lon: -0.17207 },
+            { id: 31, lat: 51.53127, lon: -0.15580 }, { id: 32, lat: 41.13915, lon: -100.82468 }, { id: 33, lat: 41.08850, lon: -100.79658 },
+            { id: 34, lat: 41.11542, lon: -100.77896 }, { id: 35, lat: 41.09063, lon: -100.77706 }, { id: 36, lat: 41.11960, lon: -100.77665 },
+            { id: 37, lat: 41.11915, lon: -100.76942 }, { id: 38, lat: 61.16665, lon: -149.87754 }, { id: 39, lat: 61.17003, lon: -149.87108 },
+            { id: 40, lat: 61.20200, lon: -149.85200 }, { id: 41, lat: 61.18271, lon: -149.85724 }, { id: 42, lat: 61.17961, lon: -149.84591 },
+            { id: 43, lat: 61.16719, lon: -149.84118 }, { id: 44, lat: 61.16150, lon: -149.78665 }, { id: 45, lat: 61.19208, lon: -149.82722 },
+            { id: 46, lat: 61.19229, lon: -149.80686 }, { id: 47, lat: 38.94445, lon: -77.04939 }, { id: 48, lat: 38.92123, lon: -77.03629 },
+            { id: 49, lat: 38.92150, lon: -77.02682 }, { id: 50, lat: 38.92147, lon: -77.02318 }, { id: 51, lat: 38.93827, lon: -77.01033 },
+            { id: 52, lat: 38.92415, lon: -77.01180 }, { id: 53, lat: 38.94969, lon: -77.00488 }, { id: 54, lat: 41.34069, lon: -72.96098 },
+            { id: 55, lat: 41.31723, lon: -72.95648 }, { id: 56, lat: 41.32003, lon: -72.93873 }, { id: 57, lat: 41.35128, lon: -72.92412 },
+            { id: 58, lat: 41.30793, lon: -72.92678 }, { id: 59, lat: 41.31380, lon: -72.92717 }, { id: 60, lat: 41.31375, lon: -72.92357 },
+            { id: 61, lat: 41.36540, lon: -72.91560 }, { id: 62, lat: 41.39872, lon: -72.91386 }, { id: 63, lat: 41.30462, lon: -72.91782 },
+            { id: 64, lat: 41.32952, lon: -72.90449 }, { id: 65, lat: 41.30260, lon: -72.90335 }, { id: 66, lat: 41.29659, lon: -72.88267 },
+            { id: 67, lat: 41.33745, lon: -72.81779 }, { id: 68, lat: 41.33132, lon: -72.81470 }, { id: 69, lat: 41.34053, lon: -72.80311 },
+            { id: 70, lat: 41.30602, lon: -72.77083 }, { id: 71, lat: 41.30169, lon: -72.76088 }, { id: 72, lat: 32.01072, lon: 118.71946 },
+            { id: 73, lat: 32.21636, lon: 118.71987 }, { id: 74, lat: 32.05704, lon: 118.77522 }, { id: 75, lat: 32.20768, lon: 118.71861 },
+            { id: 76, lat: 32.05774, lon: 118.84310 }, { id: 77, lat: 32.20373, lon: 118.72030 }, { id: 78, lat: 32.22644, lon: 118.72945 },
+            { id: 79, lat: 32.22049, lon: 118.74004 }, { id: 80, lat: 30.29551, lon: 119.76192 }, { id: 81, lat: 30.27098, lon: 119.77053 },
+            { id: 82, lat: 30.36960, lon: 119.86860 }, { id: 83, lat: 30.37649, lon: 119.87628 }, { id: 84, lat: 30.38492, lon: 119.88121 },
+            { id: 85, lat: 30.28835, lon: 119.93999 }, { id: 86, lat: 30.22442, lon: 120.09112 }, { id: 87, lat: 30.39575, lon: 119.99079 },
+            { id: 88, lat: 30.36697, lon: 120.00620 }, { id: 89, lat: 30.29138, lon: 120.01278 }, { id: 90, lat: 30.32203, lon: 120.07198 },
+            { id: 91, lat: 30.32418, lon: 120.10150 }, { id: 92, lat: 30.38995, lon: 120.11530 }, { id: 93, lat: 30.29563, lon: 120.12788 },
+            { id: 94, lat: 30.24755, lon: 120.19426 }, { id: 95, lat: 30.31454, lon: 120.28800 }, { id: 96, lat: 30.33210, lon: 120.29050 },
+            { id: 97, lat: 30.34962, lon: 120.29370 }, { id: 98, lat: 30.32332, lon: 120.30482 }, { id: 99, lat: 22.33088, lon: 114.15717 },
+            { id: 100, lat: 22.27812, lon: 114.16698 }, { id: 101, lat: 22.30012, lon: 114.17055 }, { id: 102, lat: 22.28187, lon: 114.18884 },
+            { id: 103, lat: 23.09971, lon: 113.29374 }, { id: 104, lat: 23.11219, lon: 113.30083 }, { id: 105, lat: 23.08333, lon: 113.30416 },
+            { id: 106, lat: 23.08499, lon: 113.31057 }, { id: 107, lat: 23.08628, lon: 113.31333 }, { id: 108, lat: 23.12415, lon: 113.31914 },
+            { id: 109, lat: 23.10660, lon: 113.31985 }, { id: 110, lat: 23.12235, lon: 113.33419 }, { id: 111, lat: 23.08506, lon: 113.35130 },
+            { id: 112, lat: 23.09387, lon: 113.35990 }, { id: 113, lat: 23.07548, lon: 113.36203 }, { id: 114, lat: 23.08935, lon: 113.37329 }
+        ];
+
+        const greenspaceInfo = {};
+        const gsRanges = [
+            { from: 1, to: 3, city: 'San Lorenzo, USA', cyclist: 'Hainan Lam' },
+            { from: 4, to: 10, city: 'Los Angeles, USA', cyclist: 'Christopher Yoo' },
+            { from: 11, to: 14, city: 'San Francisco, USA', cyclist: 'Kristen Tam' },
+            { from: 15, to: 17, city: 'Provo, USA', cyclist: 'Nicholas Kendall' },
+            { from: 18, to: 28, city: 'Logan, USA', cyclist: 'Ivan Bogoev' },
+            { from: 29, to: 31, city: 'London, UK', cyclist: 'Cosima Deetman' },
+            { from: 32, to: 37, city: 'North Platte, USA', cyclist: 'Kristen Tam' },
+            { from: 38, to: 46, city: 'Anchorage, USA', cyclist: 'Grace Dietz' },
+            { from: 47, to: 53, city: 'Washington DC, USA', cyclist: 'Yichen Yang' },
+            { from: 54, to: 66, city: 'New Haven, USA', cyclist: 'Yichen Yang, Logan Howard, Justin Lai, Keer Zhang, and volunteers at Yale School of the Environment' },
+            { from: 67, to: 71, city: 'North Branford, USA', cyclist: 'Yichen Yang' },
+            { from: 72, to: 79, city: 'Nanjing, China', cyclist: 'Chang Cao and volunteers from Nanjing University of Information, Science & Technology' },
+            { from: 80, to: 98, city: 'Hangzhou, China', cyclist: 'Chang Cao and volunteers from Nanjing University of Information, Science & Technology' },
+            { from: 99, to: 102, city: 'Hong Kong, China', cyclist: 'Xinjie Huang' },
+            { from: 103, to: 114, city: 'Guangzhou, China', cyclist: 'Jian Hang and volunteers from Sun Yat-sen University' }
+        ];
+        gsRanges.forEach(r => { for (let i = r.from; i <= r.to; i++) greenspaceInfo[i] = { city: r.city, cyclist: r.cyclist }; });
+
+        const BIKE_COLOR = '#66bb6a';;
+        const bicycleIcon = makeBicycleIcon(BIKE_COLOR);
+
+        const gsIconIndex = {};
+        gsRanges.forEach((r, ci) => { for (let i = r.from; i <= r.to; i++) gsIconIndex[i] = ci; });
+
+        const cityCenters = [
+            { lon: -122.150, lat: 37.683 }, { lon: -118.541, lat: 34.251 }, { lon: -122.476, lat: 37.785 },
+            { lon: -111.644, lat: 40.241 }, { lon: -111.833, lat: 41.747 }, { lon: -0.186, lat: 51.522 },
+            { lon: -100.779, lat: 41.114 }, { lon: -149.840, lat: 61.182 }, { lon: -77.019, lat: 38.933 },
+            { lon: -72.921, lat: 41.320 }, { lon: -72.792, lat: 41.333 }, { lon: 118.737, lat: 32.150 },
+            { lon: 120.021, lat: 30.312 }, { lon: 114.174, lat: 22.291 }, { lon: 113.336, lat: 23.096 }
+        ];
+
+        function greatCircleArc(lon1, lat1, lon2, lat2, n, peakHeight) {
+            const geodesic = new Cesium.EllipsoidGeodesic(
+                Cesium.Cartographic.fromDegrees(lon1, lat1),
+                Cesium.Cartographic.fromDegrees(lon2, lat2)
+            );
+            const pts = [];
+            for (let i = 0; i <= n; i++) {
+                const t = i / n;
+                const carto = geodesic.interpolateUsingFraction(t);
+                pts.push(Cesium.Cartesian3.fromRadians(carto.longitude, carto.latitude,
+                    peakHeight * Math.sin(Math.PI * t)));
+            }
+            return pts;
+        }
+
+        const hubLon = -72.921, hubLat = 41.320;
+        cityCenters.forEach(city => {
+            if (Math.abs(city.lon - hubLon) < 0.01 && Math.abs(city.lat - hubLat) < 0.01) return;
+            viewer.entities.add({
+                polyline: {
+                    positions: greatCircleArc(city.lon, city.lat, hubLon, hubLat, 60, 600000),
+                    width: 1,
+                    material: new Cesium.PolylineGlowMaterialProperty({ glowPower: 0.1, color: Cesium.Color.WHITE.withAlpha(0.25) }),
+                    clampToGround: false
+                }
+            });
+        });
+
+        const pinHeight = 20000;
+
+        // ─── Greenspace Pins ──────────────────────────────────────────────────────────
+        greenspaces.forEach(gs => {
+            viewer.entities.add({
+                polyline: {
+                    positions: Cesium.Cartesian3.fromDegreesArrayHeights([gs.lon, gs.lat, 0, gs.lon, gs.lat, pinHeight]),
+                    width: 3,
+                    material: new Cesium.ColorMaterialProperty(Cesium.Color.fromCssColorString('#ffffff').withAlpha(0.8)),
+                    clampToGround: false
+                }
+            });
+            const gsEntity = viewer.entities.add({
+                position: Cesium.Cartesian3.fromDegrees(gs.lon, gs.lat, pinHeight),
+                billboard: {
+                    image: bicycleIcon, color: Cesium.Color.WHITE,
+                    width: 64, height: 64,
+                    verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+                    heightReference: Cesium.HeightReference.NONE,
+                    disableDepthTestDistance: Number.POSITIVE_INFINITY,
+                    scaleByDistance: new Cesium.NearFarScalar(100000, 1.2, 5000000, 0.4)
+                },
+                properties: { id: gs.id, type: 'greenspace' }
+            });
+            if (gs.id === 54) bikingEntity = gsEntity;
+            addTravelingDot(gs.lon, gs.lat, pinHeight, BIKE_COLOR);
+        });
+
+        cityCenters.forEach((city, i) => { addSonarRing(city.lon, city.lat, BIKE_COLOR, i / cityCenters.length); });
+
+        // ─── UAV Pin ──────────────────────────────────────────────────────────────────
+        const uavPoint = { lon: -72.941268, lat: 41.328833 };
+        const uavPinHeight = 80000;
+        viewer.entities.add({
+            polyline: {
+                positions: Cesium.Cartesian3.fromDegreesArrayHeights([uavPoint.lon, uavPoint.lat, 0, uavPoint.lon, uavPoint.lat, uavPinHeight]),
+                width: 3,
+                material: new Cesium.ColorMaterialProperty(Cesium.Color.fromCssColorString('#ffffff').withAlpha(0.8)),
+                clampToGround: false
+            }
+        });
+        const droneEntity = viewer.entities.add({
+            position: Cesium.Cartesian3.fromDegrees(uavPoint.lon, uavPoint.lat, uavPinHeight),
+            billboard: {
+                image: droneIconDataUrl, color: Cesium.Color.fromCssColorString('#ff4500'),
+                width: 64, height: 64,
+                verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+                heightReference: Cesium.HeightReference.NONE,
+                disableDepthTestDistance: Number.POSITIVE_INFINITY,
+                scaleByDistance: new Cesium.NearFarScalar(100000, 1.2, 5000000, 0.4)
+            },
+            properties: { type: 'uav' }
+        });
+        addTravelingDot(uavPoint.lon, uavPoint.lat, uavPinHeight, '#ff4500');
+        addSonarRing(uavPoint.lon, uavPoint.lat, '#ff4500', 0.3);
+        setInterval(() => {
+            droneRotorAngle += 0.28;
+            droneIconDataUrl = makeDroneIcon(droneRotorAngle);
+            if (droneEntity && droneEntity.billboard) droneEntity.billboard.image = droneIconDataUrl;
+        }, 50);
+
+        // ─── Sichuan Plateau ──────────────────────────────────────────────────────────
+        fetch('https://storage.googleapis.com/yyprocessing/CROP_YIELD_ONLINE/research_footprints/the_western_sichuan_plateau.geojson')
+            .then(r => r.json())
+            .then(geojson => {
+                const startDate = new Date(geojson.features[0].properties.startDate);
+                const endDate = new Date(geojson.features[0].properties.endDate);
+                viewer.clock.startTime = Cesium.JulianDate.fromDate(startDate);
+                viewer.clock.stopTime = Cesium.JulianDate.fromDate(endDate);
+                viewer.clock.currentTime = viewer.clock.startTime.clone();
+                viewer.clock.multiplier = 3600 * 24 * 30;
+                viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP;
+
+                geojson.features.forEach(feature => {
+                    const props = feature.properties;
+                    const flatCoords = feature.geometry.coordinates[0].flat();
+                    const sEnt = viewer.entities.add({
+                        name: props.name,
+                        availability: new Cesium.TimeIntervalCollection([new Cesium.TimeInterval({
+                            start: Cesium.JulianDate.fromDate(new Date(props.startDate)),
+                            stop: Cesium.JulianDate.fromDate(new Date(props.endDate))
+                        })]),
+                        polygon: {
+                            hierarchy: Cesium.Cartesian3.fromDegreesArray(flatCoords),
+                            material: new Cesium.StripeMaterialProperty({
+                                evenColor: Cesium.Color.fromCssColorString('#4a90d9').withAlpha(0.5),
+                                oddColor: Cesium.Color.fromCssColorString('#1a3a5c').withAlpha(0.15),
+                                repeat: 80, orientation: Cesium.StripeOrientation.HORIZONTAL,
+                                offset: new Cesium.CallbackProperty((time) => Cesium.JulianDate.secondsDifference(time, viewer.clock.startTime) * 0.02, false)
+                            }),
+                            extrudedHeight: 50000, height: 0,
+                            outline: true, outlineColor: Cesium.Color.fromCssColorString('#4a90d9'), outlineWidth: 2
+                        },
+                        properties: { ...props }
+                    });
+                    if (!sichuanEntity) sichuanEntity = sEnt;
+                    const bounds = { minLon: 97, maxLon: 104, minLat: 27, maxLat: 34 };
+                    const maxH = props.elevationMean * 100;
+                    for (let i = 0; i < 60; i++) {
+                        const lon = bounds.minLon + Math.random() * (bounds.maxLon - bounds.minLon);
+                        const lat = bounds.minLat + Math.random() * (bounds.maxLat - bounds.minLat);
+                        const startOffset = Math.random();
+                        const duration = 3000 + Math.random() * 4000;
+                        viewer.entities.add({
+                            position: new Cesium.CallbackProperty(() => {
+                                const now = Date.now();
+                                const cycle = ((now / duration) + startOffset) % 1;
+                                return Cesium.Cartesian3.fromDegrees(lon, lat, maxH * (1 - cycle));
+                            }, false),
+                            point: { pixelSize: 3, color: Cesium.Color.fromCssColorString('#a8d8ea').withAlpha(0.9), disableDepthTestDistance: Number.POSITIVE_INFINITY }
+                        });
+                    }
+                });
+            })
+            .catch(err => console.error('GeoJSON error:', err));
+
+        // ─── Taihu Lake ───────────────────────────────────────────────────────────────
+        fetch('https://storage.googleapis.com/yyprocessing/CROP_YIELD_ONLINE/research_footprints/taihu_lake.geojson')
+            .then(r => r.json())
+            .then(geojson => {
+                let lakeRing = null;
+                geojson.features.forEach(feature => {
+                    lakeRing = feature.geometry.coordinates[0];
+                    const flatCoords = feature.geometry.coordinates[0].flat();
+                    taihuEntity = viewer.entities.add({
+                        name: 'Taihu Lake',
+                        polygon: {
+                            hierarchy: Cesium.Cartesian3.fromDegreesArray(flatCoords),
+                            material: new Cesium.StripeMaterialProperty({
+                                evenColor: Cesium.Color.fromCssColorString('#1a90d9').withAlpha(0.55),
+                                oddColor: Cesium.Color.fromCssColorString('#a8d8ea').withAlpha(0.2),
+                                repeat: 40, orientation: Cesium.StripeOrientation.HORIZONTAL,
+                                offset: new Cesium.CallbackProperty(() => (Date.now() / 1000) * 0.015, false)
+                            }),
+                            height: 0, outline: true,
+                            outlineColor: Cesium.Color.fromCssColorString('#1a90d9').withAlpha(0.8), outlineWidth: 2
+                        },
+                        properties: { type: 'taihu' }
+                    });
+                });
+                function pointInPolygon(lon, lat, ring) {
+                    let inside = false;
+                    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                        const xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1];
+                        if (((yi > lat) !== (yj > lat)) && (lon < (xj - xi) * (lat - yi) / (yj - yi) + xi)) inside = !inside;
+                    }
+                    return inside;
+                }
+                const streamCount = 22;
+                const lonMin = 119.92, lonMax = 120.52, latMin = 30.95, latMax = 31.55;
+                const ribbonLen = 0.85;
+                const cycleLen = (lonMax - lonMin) + ribbonLen;
+                for (let s = 0; s < streamCount; s++) {
+                    const baseLat = latMin + (s / (streamCount - 1)) * (latMax - latMin);
+                    const amplitude = 0.012 + Math.random() * 0.018;
+                    const wavelength = 0.18 + Math.random() * 0.12;
+                    const travelSpeed = 0.000032 + Math.random() * 0.000022;
+                    const waveSpeed = 0.00018 + Math.random() * 0.00014;
+                    const phaseShift = Math.random() * Math.PI * 2;
+                    const shakeFreq = 0.0006 + Math.random() * 0.0004;
+                    const alpha = 0.3 + Math.random() * 0.3;
+                    viewer.entities.add({
+                        polyline: {
+                            positions: new Cesium.CallbackProperty(() => {
+                                if (!lakeRing) return [];
+                                const now = Date.now();
+                                const headLon = lonMin + ((now * travelSpeed + phaseShift * 12) % cycleLen);
+                                const tailLon = headLon - ribbonLen;
+                                const steps = 40; const pts = [];
+                                for (let i = 0; i <= steps; i++) {
+                                    const lon = tailLon + (i / steps) * ribbonLen;
+                                    if (lon < lonMin || lon > lonMax) continue;
+                                    const phase = (lon / wavelength) + phaseShift + now * waveSpeed;
+                                    const shake = Math.sin(now * shakeFreq + phaseShift * 2.3) * 0.006;
+                                    const lat = baseLat + Math.sin(phase) * amplitude + shake;
+                                    if (pointInPolygon(lon, lat, lakeRing)) pts.push(Cesium.Cartesian3.fromDegrees(lon, lat, 150));
+                                    else if (pts.length > 0) break;
+                                }
+                                return pts;
+                            }, false),
+                            width: 1.5,
+                            material: new Cesium.ColorMaterialProperty(Cesium.Color.fromCssColorString('#a8d8ea').withAlpha(alpha)),
+                            clampToGround: false
+                        }
+                    });
+                }
+                const taihuCenter = { lon: 120.22, lat: 31.20 };
+                const taihuColor = Cesium.Color.fromCssColorString('#1a90d9');
+                const taihuPeriod = 4500;
+                [0, 0.33, 0.66].forEach(phase => {
+                    const t0 = Date.now() - phase * taihuPeriod;
+                    viewer.entities.add({
+                        position: Cesium.Cartesian3.fromDegrees(taihuCenter.lon, taihuCenter.lat, 100),
+                        ellipse: {
+                            semiMajorAxis: new Cesium.CallbackProperty(() => (((Date.now() - t0) % taihuPeriod) / taihuPeriod) * 80000, false),
+                            semiMinorAxis: new Cesium.CallbackProperty(() => (((Date.now() - t0) % taihuPeriod) / taihuPeriod) * 80000, false),
+                            material: new Cesium.ColorMaterialProperty(Cesium.Color.TRANSPARENT),
+                            outline: true,
+                            outlineColor: new Cesium.CallbackProperty(() => {
+                                const t = ((Date.now() - t0) % taihuPeriod) / taihuPeriod;
+                                return taihuColor.withAlpha(Math.max(0, (1 - t) * 0.5));
+                            }, false),
+                            outlineWidth: 2, height: 100
+                        }
+                    });
+                });
+            })
+            .catch(err => console.error('Taihu GeoJSON error:', err));
+
+        // ─── LST Sharpening Study ─────────────────────────────────────────────────────
+        fetch('https://storage.googleapis.com/yyprocessing/CROP_YIELD_ONLINE/research_footprints/new_haven_county.geojson')
+            .then(r => r.json())
+            .then(geojson => {
+                geojson.features.forEach(feature => {
+                    const geom = feature.geometry;
+                    const geometries = geom.type === 'GeometryCollection' ? geom.geometries : [geom];
+                    const boundaryGeom = geometries[7];
+                    if (!boundaryGeom || boundaryGeom.type !== 'Polygon') return;
+                    const coords = boundaryGeom.coordinates[0];
+                    const flatCoords = coords.flatMap(([lo, la]) => [lo, la]);
+                    let cLon = 0, cLat = 0;
+                    coords.forEach(([lo, la]) => { cLon += lo; cLat += la; });
+                    cLon /= coords.length; cLat /= coords.length;
+                    const satHeight = 3500000;
+                    viewer.entities.add({
+                        name: 'LST Sharpening',
+                        polygon: {
+                            hierarchy: Cesium.Cartesian3.fromDegreesArray(flatCoords),
+                            material: new Cesium.ColorMaterialProperty(Cesium.Color.TRANSPARENT),
+                            height: 0, outline: true,
+                            outlineColor: Cesium.Color.fromCssColorString('#ffe066').withAlpha(0.9), outlineWidth: 2
+                        }
+                    });
+                    const satPos = Cesium.Cartesian3.fromDegrees(cLon, cLat, satHeight);
+                    const stride = Math.max(1, Math.floor(coords.length / 28));
+                    for (let i = 0; i < coords.length - 1; i += stride) {
+                        viewer.entities.add({
+                            polyline: {
+                                positions: [satPos, Cesium.Cartesian3.fromDegrees(coords[i][0], coords[i][1], 0)],
+                                width: 1,
+                                material: new Cesium.PolylineDashMaterialProperty({ color: Cesium.Color.fromCssColorString('#ffe066').withAlpha(0.45), dashLength: 16, dashPattern: 0xFF00 }),
+                                clampToGround: false
+                            }
+                        });
+                    }
+                    lstEntity = viewer.entities.add({
+                        position: satPos,
+                        billboard: {
+                            image: satelliteIcon, color: Cesium.Color.WHITE,
+                            width: 80, height: 80,
+                            verticalOrigin: Cesium.VerticalOrigin.CENTER,
+                            heightReference: Cesium.HeightReference.NONE,
+                            disableDepthTestDistance: Number.POSITIVE_INFINITY,
+                            scaleByDistance: new Cesium.NearFarScalar(500000, 1.2, 8000000, 0.4)
+                        },
+                        properties: { type: 'lst' }
+                    });
+                });
+            })
+            .catch(err => console.error('LST GeoJSON error:', err));
+
+        // ─── NH City Humid Heat Study ─────────────────────────────────────────────────
+        // FIX 2: Car icon placed on the ground — no leading line, no traveling dot
+        fetch('https://storage.googleapis.com/yyprocessing/CROP_YIELD_ONLINE/research_footprints/new_haven_city.geojson')
+            .then(r => r.json())
+            .then(geojson => {
+                geojson.features.forEach(feature => {
+                    const geom = feature.geometry;
+                    const geometries = geom.type === 'GeometryCollection' ? geom.geometries : [geom];
+                    const polygonGeom = geometries
+                        .filter(g => g.type === 'Polygon')
+                        .sort((a, b) => b.coordinates[0].length - a.coordinates[0].length)[0];
+                    if (!polygonGeom) { console.error('No Polygon found in nhcity GeoJSON'); return; }
+                    const coords = polygonGeom.coordinates[0];
+                    const flatCoords = coords.flatMap(([lo, la]) => [lo, la]);
+                    let cLon = 0, cLat = 0;
+                    coords.forEach(([lo, la]) => { cLon += lo; cLat += la; });
+                    cLon /= coords.length; cLat /= coords.length;
+
+                    // Purple polygon outline + subtle fill
+                    nhcityPolygonEntity = viewer.entities.add({
+                        name: 'NH Humid Heat',
+                        polygon: {
+                            hierarchy: Cesium.Cartesian3.fromDegreesArray(flatCoords),
+                            material: new Cesium.ColorMaterialProperty(Cesium.Color.fromCssColorString('#cc44ff').withAlpha(0.12)),
+                            height: 0, outline: true,
+                            outlineColor: Cesium.Color.fromCssColorString('#cc44ff').withAlpha(0.9), outlineWidth: 2
+                        },
+                        properties: { type: 'nhcity' }
+                    });
+                    nhcityOriginalMaterial = nhcityPolygonEntity.polygon.material;
+                    nhcityOriginalOutlineWidth = nhcityPolygonEntity.polygon.outlineWidth;
+                    nhcityOriginalOutlineColor = nhcityPolygonEntity.polygon.outlineColor;
+
+                    // Car icon flat on the ground — NO leading line, NO traveling dot
+                    nhcityBillboardEntity = viewer.entities.add({
+                        position: Cesium.Cartesian3.fromDegrees(cLon, cLat, 0),
+                        billboard: {
+                            image: carRouteIcon,
+                            color: Cesium.Color.WHITE,
+                            width: 80, height: 80,
+                            verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+                            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+                            disableDepthTestDistance: Number.POSITIVE_INFINITY,
+                            scaleByDistance: new Cesium.NearFarScalar(50000, 1.6, 3000000, 0.5)
+                        },
+                        properties: { type: 'nhcity' }
+                    });
+                    nhcityOriginalBillboardColor = Cesium.Color.WHITE.clone();
+                });
+            })
+            .catch(err => console.error('NHCity GeoJSON error:', err));
+
+        // ─── Corn Belt ────────────────────────────────────────────────────────────────
+        // Corn icon: top-down stylized corn cob with kernels
+        function makeCornIcon() {
+            const c = document.createElement('canvas');
+            c.width = 48; c.height = 48;
+            const ctx = c.getContext('2d');
+            const col = '#4caf50';
+            ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+
+            function draw() {
+                ctx.save();
+                ctx.translate(24, 24);
+                ctx.rotate(-Math.PI / 5); // tilt ~36°
+
+                // Stem
+                ctx.beginPath();
+                ctx.moveTo(0, 18);
+                ctx.lineTo(0, 24);
+                ctx.lineWidth = 2.5;
+                ctx.stroke();
+
+                // Left broad leaf
+                ctx.beginPath();
+                ctx.moveTo(0, 14);
+                ctx.bezierCurveTo(-14, 10, -18, 2, -10, -4);
+                ctx.bezierCurveTo(-12, 4, -6, 10, 0, 12);
+                ctx.closePath();
+                ctx.fill();
+
+                // Right broad leaf
+                ctx.beginPath();
+                ctx.moveTo(0, 10);
+                ctx.bezierCurveTo(10, 6, 14, -2, 8, -8);
+                ctx.bezierCurveTo(8, 0, 4, 6, 0, 8);
+                ctx.closePath();
+                ctx.fill();
+
+                // Cob body
+                ctx.beginPath();
+                ctx.roundRect(-6, -20, 12, 22, 5);
+                ctx.fill();
+                ctx.stroke();
+
+                // Kernels — 3 columns × 5 rows, staggered
+                ctx.fillStyle = 'rgba(0,0,0,0.18)';
+                ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+                ctx.lineWidth = 0.8;
+                const cols = [-3.5, 0, 3.5];
+                for (let row = 0; row < 5; row++) {
+                    cols.forEach((cx, ci) => {
+                        const kx = cx + (row % 2 === 0 ? 0 : 1.8);
+                        const ky = -17 + row * 4;
+                        ctx.beginPath();
+                        ctx.ellipse(kx, ky, 2.2, 1.6, 0, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.stroke();
+                    });
+                }
+
+                ctx.restore();
+            }
+
+            // Glow pass
+            ctx.strokeStyle = col; ctx.fillStyle = col;
+            ctx.lineWidth = 2; ctx.shadowColor = col; ctx.shadowBlur = 10; ctx.globalAlpha = 0.35;
+            draw();
+            // Core pass
+            ctx.lineWidth = 1; ctx.shadowBlur = 4; ctx.globalAlpha = 1;
+            ctx.strokeStyle = '#ffffff'; ctx.fillStyle = '#7bc67e'; ctx.shadowColor = col;
+            draw();
+
+            return c.toDataURL();
+        }
+        const cornIcon = makeCornIcon();
+
+        fetch('https://storage.googleapis.com/yyprocessing/CROP_YIELD_ONLINE/research_footprints/us_corn_belt.geojson')
+            .then(r => r.json())
+            .then(geojson => {
+                // Point-in-multipolygon helper
+                function ptInPoly(lon, lat, coords) {
+                    // coords may be array of rings (Polygon) or array of polygons (MultiPolygon handled outside)
+                    let inside = false;
+                    const ring = coords[0]; // outer ring only
+                    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                        const xi = ring[i][0], yi = ring[i][1];
+                        const xj = ring[j][0], yj = ring[j][1];
+                        if (((yi > lat) !== (yj > lat)) && (lon < (xj - xi) * (lat - yi) / (yj - yi) + xi))
+                            inside = !inside;
+                    }
+                    return inside;
+                }
+
+                // Collect all polygon rings across all features (MultiPolygon / Polygon)
+                const allRings = [];
+                geojson.features.forEach(f => {
+                    const geom = f.geometry;
+                    const geometries = geom.type === 'GeometryCollection' ? geom.geometries : [geom];
+                    const boundaryGeom = geometries[8]; // 9th element — the 355-vertex boundary polygon
+                    if (!boundaryGeom || boundaryGeom.type !== 'Polygon') return;
+                    allRings.push(boundaryGeom.coordinates);
+                });
+
+                // Bounding box of corn belt
+                let minLon = Infinity, maxLon = -Infinity, minLat = Infinity, maxLat = -Infinity;
+                allRings.forEach(coords => coords[0].forEach(([lo, la]) => {
+                    if (lo < minLon) minLon = lo; if (lo > maxLon) maxLon = lo;
+                    if (la < minLat) minLat = la; if (la > maxLat) maxLat = la;
+                }));
+
+                function isInsideCornBelt(lon, lat) {
+                    return allRings.some(coords => ptInPoly(lon, lat, coords));
+                }
+
+                // Draw the polygon(s) — green vegetation color, striped like a field
+                geojson.features.forEach(feature => {
+                    const geom = feature.geometry;
+                    const geometries = geom.type === 'GeometryCollection' ? geom.geometries : [geom];
+                    const boundaryGeom = geometries[8];
+                    if (!boundaryGeom || boundaryGeom.type !== 'Polygon') return;
+                    const polys = [boundaryGeom.coordinates];
+                    polys.forEach(polyCoords => {
+                        const flat = polyCoords[0].flat();
+                        const ent = viewer.entities.add({
+                            polygon: {
+                                hierarchy: Cesium.Cartesian3.fromDegreesArray(flat),
+                                material: new Cesium.StripeMaterialProperty({
+                                    evenColor: Cesium.Color.fromCssColorString('#2e7d32').withAlpha(0.35),
+                                    oddColor: Cesium.Color.fromCssColorString('#81c784').withAlpha(0.12),
+                                    outlineColor: Cesium.Color.fromCssColorString('#43a047').withAlpha(0.95),
+                                    repeat: 120,
+                                    orientation: Cesium.StripeOrientation.HORIZONTAL
+                                }),
+                                height: 0,
+                                outline: true,
+                                outlineColor: Cesium.Color.fromCssColorString('#66bb6a').withAlpha(0.9),
+                                outlineWidth: 2
+                            },
+                            properties: { type: 'cornbelt' }
+                        });
+                        // Save first polygon entity as the selectable one
+                        if (!cornbeltEntity) {
+                            cornbeltEntity = ent;
+                            cornbeltOriginalMaterial = ent.polygon.material;
+                            cornbeltOriginalOutlineWidth = ent.polygon.outlineWidth;
+                            cornbeltOriginalOutlineColor = ent.polygon.outlineColor;
+                        }
+                    });
+                });
+
+                // Tile corn icons on a regular grid inside the belt
+                const spacing = 0.8; // degrees — sparse enough to feel airy
+                for (let lon = minLon + spacing * 0.5; lon < maxLon; lon += spacing) {
+                    for (let lat = minLat + spacing * 0.5; lat < maxLat; lat += spacing) {
+                        if (!isInsideCornBelt(lon, lat)) continue;
+                        // Slight jitter so it doesn't look perfectly mechanical
+                        const jLon = lon + (Math.random() - 0.5) * spacing * 0.4;
+                        const jLat = lat + (Math.random() - 0.5) * spacing * 0.4;
+                        viewer.entities.add({
+                            position: Cesium.Cartesian3.fromDegrees(jLon, jLat, 0),
+                            billboard: {
+                                image: cornIcon,
+                                width: 28, height: 28,
+                                color: Cesium.Color.fromCssColorString('#a5d6a7').withAlpha(0.75),
+                                verticalOrigin: Cesium.VerticalOrigin.CENTER,
+                                heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+                                disableDepthTestDistance: Number.POSITIVE_INFINITY,
+                                scaleByDistance: new Cesium.NearFarScalar(200000, 1.2, 6000000, 0.3)
+                            }
+                            // No properties — non-clickable decorative icons
+                        });
+                    }
+                }
+            })
+            .catch(err => console.error('Corn Belt GeoJSON error:', err));
+
+
+        const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+        handler.setInputAction(function (click) {
+            const picked = viewer.scene.pick(click.position);
+
+            // Only act on clicks that hit a real entity — empty space does nothing
+            if (!Cesium.defined(picked) || !picked.id) return;
+
+            const entity = picked.id;
+            const props = entity.properties;
+            if (!props) return;
+            const type = props.type && props.type.getValue ? props.type.getValue() : props.type;
+            const gsId = props.id && props.id.getValue ? props.id.getValue() : props.id;
+
+            // Clear all previous selections before applying the new one
+            clearAllSelections();
+
+            if (type === 'greenspace' && gsId) {
+                selectedBillboard = entity;
+                originalBillboardColor = entity.billboard.color.getValue(Cesium.JulianDate.now()).clone();
+                entity.billboard.color = Cesium.Color.fromCssColorString('#ffdd00');
+                const info = greenspaceInfo[gsId];
+                if (info) showGreenspacePanel(gsId, info.city, info.cyclist);
+                return;
+            }
+            if (type === 'uav') {
+                selectedBillboard = entity;
+                originalBillboardColor = Cesium.Color.fromCssColorString('#ff4500').clone();
+                entity.billboard.color = Cesium.Color.fromCssColorString('#ffdd00');
+                showUAVPanel(); return;
+            }
+            if (type === 'taihu') {
+                selectedEntity = entity; originalMaterial = entity.polygon.material;
+                originalOutlineWidth = entity.polygon.outlineWidth; originalOutlineColor = entity.polygon.outlineColor;
+                entity.polygon.material = Cesium.Color.fromCssColorString('#ffdd00').withAlpha(0.5);
+                entity.polygon.outlineWidth = 4; entity.polygon.outlineColor = Cesium.Color.fromCssColorString('#ffdd00').withAlpha(0.9);
+                showTaihuPanel(); return;
+            }
+            if (type === 'lst') {
+                if (entity.billboard) {
+                    selectedBillboard = entity;
+                    originalBillboardColor = entity.billboard.color.getValue(Cesium.JulianDate.now()).clone();
+                    entity.billboard.color = Cesium.Color.fromCssColorString('#ffdd00');
+                }
+                showLSTPanel(); return;
+            }
+            if (type === 'nhcity') {
+                // Unified: always highlight BOTH polygon and billboard regardless of which was clicked
+                if (nhcityPolygonEntity) {
+                    nhcityPolygonEntity.polygon.material = Cesium.Color.fromCssColorString('#ffdd00').withAlpha(0.35);
+                    nhcityPolygonEntity.polygon.outlineWidth = 4;
+                    nhcityPolygonEntity.polygon.outlineColor = Cesium.Color.fromCssColorString('#ffdd00').withAlpha(0.9);
+                }
+                if (nhcityBillboardEntity) {
+                    nhcityBillboardEntity.billboard.color = Cesium.Color.fromCssColorString('#ffdd00');
+                }
+                nhcitySelected = true;
+                showNHCityPanel(); return;
+            }
+            if (type === 'cornbelt') {
+                if (cornbeltEntity) {
+                    cornbeltEntity.polygon.material = Cesium.Color.fromCssColorString('#ffdd00').withAlpha(0.45);
+                    cornbeltEntity.polygon.outlineWidth = 4;
+                    cornbeltEntity.polygon.outlineColor = Cesium.Color.fromCssColorString('#ffdd00').withAlpha(0.9);
+                }
+                showCornBeltPanel(); return;
+            }
+            // Sichuan polygon (no type property set, falls through to here)
+            if (!entity.polygon) return;
+            selectedEntity = entity; originalMaterial = entity.polygon.material;
+            originalOutlineWidth = entity.polygon.outlineWidth; originalOutlineColor = entity.polygon.outlineColor;
+            entity.polygon.material = Cesium.Color.fromCssColorString('#ffdd00').withAlpha(0.8);
+            entity.polygon.outlineWidth = 4; entity.polygon.outlineColor = Cesium.Color.fromCssColorString('#ffdd00').withAlpha(0.9);
+            showSichuanPanel();
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+        // ─── Panel Functions ──────────────────────────────────────────────────────────
+        // FIX 3: All paper links use openLink() to bypass iframe CSP blocking
+
+        function showGreenspacePanel(id, city, cyclist) {
+            document.getElementById('panelContent').innerHTML = `
+                <h2 style="font-size:20px;">Regulation of Humid Heat by Urban Green Space across a Climate Wetness Gradient</h2>
+                <img src="https://storage.googleapis.com/yyprocessing/CROP_YIELD_ONLINE/research_footprints/bikingroute.webp"
+                     style="width:100%;border-radius:6px;margin:16px 0;cursor:zoom-in;" onclick="openLightbox(this.src)" />
+                <p><strong>This is a green space in ${city}.</strong> We conducted mobile biking measurements across 15 global cities to compare the humid heat of green spaces with their surrounding built-up environments. Results show that the daytime temperature effect is negatively correlated with the humidity effect, leaving no significant impact on humid heat. However, a net reduction in humid heat was observed at night. Furthermore, we found a gradient where both temperature and humidity effects are stronger in drier climates than in wetter ones.</p>
+                <br/>
+                <p><strong>Project:</strong> <a onclick="openLink('https://biking-for-science.yale.edu/')">Biking for Science and Health, Yale University</a></p>
+                <p><strong>Publication:</strong> <a onclick="openLink('https://www.nature.com/articles/s44284-024-00157-y')">Nature Cities, 2024</a></p>
+                <p><strong>Cyclist:</strong> ${cyclist}</p>
+            `;
+            document.getElementById('infoPanel').classList.add('active');
+        }
+
+        function showUAVPanel() {
+            document.getElementById('panelContent').innerHTML = `
+                <h2 style="font-size:20px;">Four-band Thermal Mosaicking: A New Method to Process Infrared Thermal Imagery of Urban Landscapes from UAV Flights</h2>
+                <img src="https://storage.googleapis.com/yyprocessing/CROP_YIELD_ONLINE/research_footprints/thermalmosaicking.webp"
+                     style="width:100%;border-radius:6px;margin:16px 0;cursor:zoom-in;" onclick="openLightbox(this.src)" />
+                <p>To overcome the specific challenges of thermal image mosaicking, where low resolution and weak contrast typically cause stitching errors, I developed a novel method called Four-Band Thermal Mosaicking and tested it in a highly heterogeneous urban landscape featuring a rich mix of vegetation, water, and built surfaces.</p>
+                <br/>
+                <p><strong>UAV Pilot:</strong> Yichen Yang</p>
+                <p><strong>Publication:</strong> <a onclick="openLink('https://www.mdpi.com/2072-4292/11/11/1365')">Remote Sensing, 2019</a></p>
+            `;
+            document.getElementById('infoPanel').classList.add('active');
+        }
+
+        function showSichuanPanel() {
+            document.getElementById('panelContent').innerHTML = `
+                <h2 style="font-size:20px;">Spatiotemporal Variability of Precipitation on the Western Sichuan Plateau</h2>
+                <img src="https://storage.googleapis.com/yyprocessing/CROP_YIELD_ONLINE/research_footprints/sichuan.webp"
+                     style="width:100%;border-radius:6px;margin:16px 0;cursor:zoom-in;" onclick="openLightbox(this.src)" />
+                <p>This study investigated how precipitation patterns across the Western Sichuan Plateau, China, have shifted over three decades, using daily records from 52 meteorological stations distributed across Sichuan Province spanning 1980 to 2012. Precipitation was decomposed into seasonal components and intensity categories, from light rain to heavy storms, and their long-term trends were spatially mapped across this high-altitude terrain.</p>
+                <br/>
+                <p><strong>Project:</strong> Undergraduate Thesis, Atmospheric Science, Chengdu University of Information Technology</p>
+            `;
+            document.getElementById('infoPanel').classList.add('active');
+        }
+
+        function showTaihuPanel() {
+            document.getElementById('panelContent').innerHTML = `
+                <h2 style="font-size:20px;">Diurnal and Seasonal Variations of Thermal Stratification and Vertical Mixing in a Shallow Fresh Water Lake</h2>
+                <img src="https://storage.googleapis.com/yyprocessing/CROP_YIELD_ONLINE/research_footprints/waterstratification.webp"
+                     style="width:100%;border-radius:6px;margin:16px 0;cursor:zoom-in;" onclick="openLightbox(this.src)" />
+                <p>I investigated the vertical thermal structure of Lake Taihu, a shallow fresh water lake in China. The study reveals that while solar heating creates distinct temperature layers, wind speeds above 3.0 m/s typically trigger full mixing, causing the lake to shift between stratified and mixed states on a daily basis.</p>
+                <br/>
+                <p><strong>Project:</strong> Master thesis, Environmental Engineering, Nanjing University of Information Science & Technology</p>
+                <p><strong>Publication:</strong> <a onclick="openLink('https://link.springer.com/article/10.1007/s13351-018-7099-5')">Journal of Meteorological Research</a></p>
+            `;
+            document.getElementById('infoPanel').classList.add('active');
+        }
+
+        function showLSTPanel() {
+            document.getElementById('panelContent').innerHTML = `
+                <h2 style="font-size:20px;">A Scale-Separating Framework for Fusing Satellite Land Surface Temperature Products</h2>
+                <img src="https://storage.googleapis.com/yyprocessing/CROP_YIELD_ONLINE/research_footprints/sharpenedmodis.webp"
+                     style="width:100%;border-radius:6px;margin:16px 0;cursor:zoom-in;" onclick="openLightbox(this.src)" />
+                <p>I proposed a framework combining deep learning to fuse satellite Land Surface Temperature (LST) products for high spatial and temporal resolution. By modeling the MODIS-to-Landsat mapping across multiple spatial scales, this method achieved state-of-the-art accuracy in sharpening thermal imagery. This study made a rare attempt to associate prediction error with land-use types; this provides a self-explanatory link between surface characteristics and model performance, ensuring the results are physically interpretable rather than just statistical.</p>
+                <br/>
+                <p><strong>Publication:</strong> <a onclick="openLink('https://www.mdpi.com/2072-4292/14/4/983#')">Remote Sensing, 2022</a></p>
+            `;
+            document.getElementById('infoPanel').classList.add('active');
+        }
+
+        function showNHCityPanel() {
+            document.getElementById('panelContent').innerHTML = `
+                <h2 style="font-size:20px;">Contributions of Temperature and Humidity to Intra-city Variations in Humid Heat</h2>
+                <img src="https://storage.googleapis.com/yyprocessing/CROP_YIELD_ONLINE/research_footprints/mobileNH.webp"
+                     style="width:100%;border-radius:6px;margin:16px 0;cursor:zoom-in;" onclick="openLightbox(this.src)" />
+                <p>I investigated the intra-city variations of humid heat (using wet-bulb temperature as a proxy) and how temperature and humidity combined to influence it. I found that built-up neighborhoods consistently experience higher humid heat than others due to less efficient energy dissipation during the day and higher heat release from urban structures at night. My analysis further included comparisons between day and night, warm and cold seasons, and diverse weather scenarios to characterize these variations across time and atmospheric conditions.</p>
+                <br/>
+                <p><strong>Publication:</strong> <a onclick="openLink('https://www.sciencedirect.com/science/article/abs/pii/S2212095524003985')">Urban Climate, 2024</a></p>
+            `;
+            document.getElementById('infoPanel').classList.add('active');
+        }
+
+        function showCornBeltPanel() {
+            document.getElementById('panelContent').innerHTML = `
+                <h2 style="font-size:20px;">US Corn Belt Monitoring & Yield Forecasting</h2>
+                <img src="https://storage.googleapis.com/yyprocessing/CROP_YIELD_ONLINE/research_footprints/uscornbeltmonitoring.webp"
+                     style="width:100%;border-radius:6px;margin:16px 0;cursor:zoom-in;" onclick="openLightbox(this.src)" />
+<p>Corn yield forecasts move markets. Every year, substantial sums in commodity trades are made or lost in the weeks before USDA releases its official monthly estimates, and for most of that window, the public is flying blind. Large institutional players manage this uncertainty with proprietary forecast models built on satellite data, weather analytics, and their own internal data pipelines. Farmers, regional co-ops, and smaller traders have more limited access to this kind of intelligence, leaving them more passive in the market and often having to comply with price signals set by larger players.</p>
+<p>This project is an attempt to close that gap. I collect data from open satellite archives, weather reanalysis, and USDA crop progress reports, and apply state-of-the-art published methods to generate county-level corn yield forecasts for the 12 top-producing states in the US Corn Belt, updated throughout the growing season and freely accessible to anyone. I also publish my own national-level corn yield forecast, serving as an independent second signal alongside the official USDA estimates. The goal is twofold: to provide a genuine public good by democratizing early-season yield intelligence, and to benchmark published forecasting methods against each other in a real, operational setting rather than the controlled conditions of academic papers.</p>
+<p>Alongside the forecasts, I built a monitoring dashboard that aggregates the full picture at county level: historical and current vegetation indices, weather anomalies, and drought indices, all the leading indicators that impact final yield. It is designed to be a no-friction first stop for anyone who wants a quick read on what is happening in the Corn Belt right now, without the overhead of pulling and processing the underlying data themselves.</p>
+                <br/>
+                <p><strong>Project:</strong> PhD side project for satellite data application in agriculture, Yale University</p>
+                <p><strong>Web Apps:</strong><br/>
+<a onclick="openLink('./corn_forecast.html')">US Corn Belt Monitoring & Yield Forecasting</a><br/>
+<a onclick="openLink('./corn_national.html')">US National Corn Yield Forecasting</a></p>
+            `;
+            document.getElementById('infoPanel').classList.add('active');
+        }
+
+
+        function closePanel() {
+            document.getElementById('infoPanel').classList.remove('active');
+            clearAllSelections();
+        }
+
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closePanel(); });
+    </script>
+</body>
+
+</html>

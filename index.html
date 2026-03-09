@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yichen Yang</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Space Grotesk', sans-serif; background: #ffffff; color: #2c3e37; line-height: 1.7; font-size: 18px; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 80px 80px; }
+        header { width: 100%; height: 900px; padding: 280px 240px 180px 220px; margin-bottom: 0; position: relative; background-color: #2d5f3f; background-image: url('https://storage.googleapis.com/yyprocessing/CROP_YIELD_ONLINE/background_big.webp'); background-size: cover; background-position: center; background-repeat: no-repeat; }
+        header::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(31,77,52,0); z-index: 1; }
+        .header-content { position: relative; z-index: 2; }
+        header .name { color: #ffffff; text-shadow: 0 2px 8px rgba(0,0,0,0.8); }
+        header .name span { color: #a0c8a2; }
+        header .tagline { color: #e8f2e6; text-shadow: 0 2px 8px rgba(0,0,0,0.8); }
+        header .affiliation { color: #e8f2e6; text-shadow: 0 2px 8px rgba(0,0,0,0.8); }
+        .name { font-size: 128px; font-weight: 1500; letter-spacing: -2.5px; line-height: 1.1; margin-bottom: 20px; }
+        .name span { color: #4a7c59; }
+        .tagline { font-size: 36px; color: #2d5f3f; font-weight: 1500; margin-bottom: 14px; margin-left: 30px; letter-spacing: -0.2px; }
+        .affiliation { font-size: 36px; color: #5a6c64; font-weight: 1500; letter-spacing: 0.5px; margin-left: 30px; text-transform: uppercase; }
+        nav { margin: 70px 0; padding: 35px 0; border-top: 1px solid #d4e5d0; border-bottom: 1px solid #d4e5d0; display: flex; gap: 60px; justify-content: left; }
+        nav a { font-size: 20px; text-decoration: none; color: #2c3e37; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 600; transition: all 0.3s; position: relative; padding-bottom: 4px; }
+        nav a::after { content: ''; position: absolute; bottom: 0; left: 0; width: 0; height: 2px; background: #2d5f3f; transition: width 0.3s; }
+        nav a:hover { color: #2d5f3f; }
+        nav a:hover::after { width: 100%; }
+        h2 { font-size: 42px; font-weight: 700; margin-bottom: 45px; color: #1f4d34; letter-spacing: -1.5px; position: relative; padding-bottom: 16px; }
+        h2::after { content: ''; position: absolute; bottom: 0; left: 0; width: 80px; height: 3px; background: linear-gradient(90deg, #2d5f3f, #4a7c59); }
+        .about { margin-bottom: 100px; }
+        .about p { margin-bottom: 30px; font-size: 24px; color: #3a4a42; line-height: 1.8; }
+        .highlight-box { background: linear-gradient(135deg, #eef5f0 0%, #f4f9f5 100%); border-left: 4px solid #2d5f3f; padding: 50px 45px; margin: 70px 0; position: relative; }
+        .highlight-box::before { content: ''; position: absolute; top: 20px; right: 20px; width: 60px; height: 60px; border: 1px solid rgba(45,95,63,0.2); border-radius: 50%; }
+        .highlight-box::after { content: ''; position: absolute; top: 30px; right: 30px; width: 40px; height: 40px; border: 1px solid rgba(45,95,63,0.15); border-radius: 50%; }
+        .highlight-box h3 { font-size: 28px; font-weight: 700; margin-bottom: 18px; letter-spacing: -0.5px; color: #1f4d34; }
+        .highlight-box p { font-size: 24px; line-height: 1.7; color: #2c3e37; }
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 50px; margin: 80px 0; padding: 70px 0; border-top: 1px solid #d4e5d0; border-bottom: 1px solid #d4e5d0; position: relative; }
+        .stat { text-align: center; position: relative; }
+        .stat::before { content: ''; position: absolute; top: -30px; left: 50%; transform: translateX(-50%); width: 30px; height: 2px; background: #4a7c59; }
+        .stat-number { font-size: 56px; font-weight: 700; color: #2d5f3f; display: block; margin-bottom: 12px; letter-spacing: -2px; }
+        .stat-label { font-size: 13px; color: #5a6c64; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; }
+        .awards { margin-bottom: 100px; }
+        .award-item { margin-bottom: 36px; padding: 32px; padding-left: 38px; background: #f5f9f6; border-left: 3px solid #7ea66d; transition: all 0.3s; position: relative; }
+        .award-item::before { content: ''; position: absolute; left: 0; top: 0; width: 3px; height: 0; background: #2d5f3f; transition: height 0.3s; }
+        .award-item:hover::before { height: 100%; }
+        .award-item:hover { background: rgba(45,95,63,0.04); }
+        .award-item h4 { font-size: 22px; font-weight: 700; margin-bottom: 10px; color: #1f4d34; letter-spacing: -0.5px; }
+        .award-item .year { font-family: 'Courier New', monospace; font-size: 12px; color: #2d5f3f; font-weight: 700; letter-spacing: 1.5px; }
+        .award-item p { font-size: 17px; color: #3a4a42; margin-top: 10px; line-height: 1.6; }
+        .award-item h4 a { color: #1f4d34; text-decoration: none; transition: color 0.3s; }
+        .award-item h4 a:hover { color: #2d5f3f; text-decoration: underline; }
+        .contact { text-align: center; padding: 80px 0; }
+        .contact-links { margin-top: 45px; display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }
+        .contact-links a { display: inline-block; padding: 14px 30px; text-decoration: none; color: #ffffff; border: 2px solid #2d5f3f; background: #2d5f3f; font-weight: 600; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; transition: all 0.3s; }
+        .contact-links a:hover { background: #1f4d34; border-color: #1f4d34; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(45,95,63,0.3); }
+        footer { text-align: center; padding: 60px 0 40px; border-top: 1px solid #d4e5d0; font-size: 13px; color: #5a6c64; }
+        footer p:first-child { color: #3a4a42; margin-bottom: 10px; font-weight: 500; }
+        #topo-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+        .about-container { display: flex; gap: 40px; align-items: center; justify-content: flex-start; }
+        .about-text { flex: 1; }
+        .photo-globe { position: relative; width: 320px; height: 320px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle, rgba(10,15,13,1) 0%, rgba(10,15,13,1) 60%, rgba(255,255,255,0) 70%); border-radius: 50%; margin-right: -20px; transform: translate(-0px, -40px); }
+        .star { position: absolute; background: #fff; border-radius: 50%; box-shadow: 0 0 4px #fff, 0 0 8px rgba(255,255,255,0.8); z-index: 1; animation: twinkle var(--t-duration) ease-in-out infinite; }
+        @keyframes twinkle { 0%, 100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 1; transform: scale(1.2); } }
+        .photo-globe img { width: 200px; height: 200px; border-radius: 50%; z-index: 10; position: relative; object-fit: cover; border: 2px solid rgba(255,255,255,0.15); box-shadow: 0 0 30px rgba(0,0,0,0.6); transform: none !important; }
+        .satellite { position: absolute; font-size: 28px; left: 50%; top: 50%; margin-left: -14px; margin-top: -14px; pointer-events: none; filter: none !important; transform-style: preserve-3d; animation: orbit3d var(--duration) linear infinite; animation-delay: var(--delay); }
+        .satellite-1 { --tilt-z: 25deg; --tilt-x: 10deg; --radius: 140px; --duration: 14s; --delay: 0s; }
+        .satellite-2 { --tilt-z: -45deg; --tilt-x: 5deg; --radius: 145px; --duration: 19s; --delay: -5s; }
+        .satellite-3 { --tilt-z: 75deg; --tilt-x: 35deg; --radius: 125px; --duration: 11s; --delay: -2s; }
+        .satellite-4 { --tilt-z: 0deg; --tilt-x: 0deg; --radius: 150px; --duration: 25s; --delay: -9s; }
+        .satellite-5 { --tilt-z: 5deg; --tilt-x: 80deg; --radius: 135px; --duration: 16s; --delay: -12s; }
+        @keyframes orbit3d {
+            0% { transform: perspective(1000px) rotateZ(var(--tilt-z)) rotateX(var(--tilt-x)) rotateY(0deg) translateX(var(--radius)) rotateY(0deg) rotateX(calc(var(--tilt-x) * -1)) rotateZ(calc(var(--tilt-z) * -1)); z-index: 5; }
+            49.9% { z-index: 5; }
+            50% { transform: perspective(1000px) rotateZ(var(--tilt-z)) rotateX(var(--tilt-x)) rotateY(180deg) translateX(var(--radius)) rotateY(-180deg) rotateX(calc(var(--tilt-x) * -1)) rotateZ(calc(var(--tilt-z) * -1)); z-index: 15; }
+            99.9% { z-index: 15; }
+            100% { transform: perspective(1000px) rotateZ(var(--tilt-z)) rotateX(var(--tilt-x)) rotateY(360deg) translateX(var(--radius)) rotateY(-360deg) rotateX(calc(var(--tilt-x) * -1)) rotateZ(calc(var(--tilt-z) * -1)); z-index: 5; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="topo-bg"></canvas>
+    <header>
+        <div class="header-content">
+            <h1 class="name">YICHEN <span>YANG</span></h1>
+            <p class="tagline">Climate and Environmental Scientist</p>
+            <p class="affiliation">PhD Candidate · Yale University</p>
+        </div>
+    </header>
+    <div class="container">
+        <nav>
+            <a href="#about">About Me</a>
+            <a href="researchfootprint.html">Research Footprints</a>
+            <a href="webapps.html">Web Tools</a>
+        </nav>
+
+        <section class="about" id="about">
+            <h2>About Me</h2>
+            <div class="about-container">
+                <div class="photo-globe">
+                    <div class="star" style="width:2px;height:2px;top:15%;left:15%;--t-duration:2.3s;"></div>
+                    <div class="star" style="width:1px;height:1px;top:20%;left:85%;--t-duration:3.8s;"></div>
+                    <div class="star" style="width:3px;height:3px;top:10%;left:70%;--t-duration:2.1s;"></div>
+                    <div class="star" style="width:2px;height:2px;top:85%;left:20%;--t-duration:4.5s;"></div>
+                    <div class="star" style="width:1px;height:1px;top:90%;left:75%;--t-duration:3.2s;"></div>
+                    <div class="star" style="width:4px;height:4px;top:25%;left:10%;--t-duration:2.7s;"></div>
+                    <div class="star" style="width:2px;height:2px;top:75%;left:90%;--t-duration:4.1s;"></div>
+                    <div class="star" style="width:1px;height:1px;top:18%;left:88%;--t-duration:3.5s;"></div>
+                    <div class="star" style="width:3px;height:3px;top:82%;left:12%;--t-duration:2.9s;"></div>
+                    <div class="star" style="width:2px;height:2px;top:12%;left:45%;--t-duration:5.2s;"></div>
+                    <div class="star" style="width:1px;height:1px;top:88%;left:55%;--t-duration:3.7s;"></div>
+                    <div class="star" style="width:4px;height:4px;top:50%;left:8%;--t-duration:1.9s;"></div>
+                    <div class="star" style="width:2px;height:2px;top:50%;left:92%;--t-duration:4.8s;"></div>
+                    <div class="star" style="width:1px;height:1px;top:22%;left:78%;--t-duration:3.1s;"></div>
+                    <div class="star" style="width:3px;height:3px;top:78%;left:22%;--t-duration:2.4s;"></div>
+                    <div class="star" style="width:2px;height:2px;top:8%;left:35%;--t-duration:5.5s;"></div>
+                    <div class="star" style="width:1px;height:1px;top:92%;left:65%;--t-duration:3.9s;"></div>
+                    <div class="star" style="width:4px;height:4px;top:35%;left:5%;--t-duration:2.2s;"></div>
+                    <div class="star" style="width:2px;height:2px;top:65%;left:95%;--t-duration:4.3s;"></div>
+                    <div class="star" style="width:1px;height:1px;top:28%;left:18%;--t-duration:3.6s;"></div>
+                    <div class="star" style="width:3px;height:3px;top:72%;left:82%;--t-duration:2.8s;"></div>
+                    <div class="star" style="width:2px;height:2px;top:42%;left:12%;--t-duration:5.1s;"></div>
+                    <div class="star" style="width:1px;height:1px;top:58%;left:88%;--t-duration:3.4s;"></div>
+                    <div class="star" style="width:4px;height:4px;top:15%;left:58%;--t-duration:2.6s;"></div>
+                    <div class="star" style="width:2px;height:2px;top:85%;left:42%;--t-duration:4.7s;"></div>
+                    <div class="star" style="width:1px;height:1px;top:32%;left:85%;--t-duration:3.3s;"></div>
+                    <div class="star" style="width:3px;height:3px;top:68%;left:15%;--t-duration:2.5s;"></div>
+                    <div class="star" style="width:2px;height:2px;top:5%;left:50%;--t-duration:5.4s;"></div>
+                    <div class="star" style="width:1px;height:1px;top:95%;left:50%;--t-duration:3.0s;"></div>
+                    <div class="star" style="width:4px;height:4px;top:50%;left:25%;--t-duration:2.0s;"></div>
+                    <div class="star" style="width:1px;height:1px;top:72%;left:85%;--t-duration:3.3s;"></div>
+                    <div class="star" style="width:3px;height:3px;top:68%;left:65%;--t-duration:2.5s;"></div>
+                    <div class="star" style="width:2px;height:2px;top:85%;left:60%;--t-duration:5.4s;"></div>
+                    <div class="star" style="width:1px;height:1px;top:95%;left:70%;--t-duration:3.0s;"></div>
+                    <div class="star" style="width:4px;height:4px;top:50%;left:75%;--t-duration:2.0s;"></div>
+                    <img src="https://storage.googleapis.com/yyprocessing/CROP_YIELD_ONLINE/selfie.jpg" alt="Yichen Yang">
+                    <div class="satellite satellite-1">🛰️</div>
+                    <div class="satellite satellite-2">🛰️</div>
+                    <div class="satellite satellite-3">🛰️</div>
+                    <div class="satellite satellite-4">🛰️</div>
+                    <div class="satellite satellite-5">🛰️</div>
+                </div>
+                <div class="about-text">
+                    <p>I am a climate and environmental scientist with foundational training in atmospheric science, meteorology, and geospatial analysis. My doctoral research at Yale University investigates intra-city variations of human heat stress using mobile measurements, satellite and drone remote sensing, GIS, and machine learning.</p>
+                    <p>Beyond my dissertation, I develop geospatial solutions for applied downstream domains, including satellite-driven agricultural crop monitoring and yield forecasting, and urban heat risk mapping using geospatial foundation models.</p>
+                    <p>I am obsessed with satellite data.</p>
+                </div>
+            </div>
+        </section>
+
+        <div class="highlight-box">
+            <h3>Research Impact</h3>
+            <p>My work generated the world's largest mobile measurement dataset for humid heat, the compound thermal effect of temperature and humidity. I deployed vehicle-mounted sensors across 15 cities spanning Mediterranean to humid subtropical climates. In one city, I maintained intensive sampling for 5+ years, capturing day and night across seasons. This characterized street-level thermal comfort at unprecedented spatiotemporal resolution. Statistical analyses demonstrate how weather scenarios regulate thermal comfort, while WRF numerical modeling reveals the underlying physical mechanism of atmospheric thermodynamic processes being modulated by urban form. This work provides one of the first systematic investigations of these relationships.</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <span class="stat-number">15</span>
+                <span class="stat-label">Cities Monitored</span>
+            </div>
+            <div class="stat">
+                <span class="stat-number">5+</span>
+                <span class="stat-label">Years Spanned</span>
+            </div>
+            <div class="stat">
+                <span class="stat-number">500K+</span>
+                <span class="stat-label">Observations Collected</span>
+            </div>
+        </div>
+
+        <section class="teaching">
+            <h2>Teaching</h2>
+            <div class="award-item">
+                <span class="year">2020-2024</span>
+                <h4>Teaching Fellow</h4>
+                <p>Satellite Remote Sensing & Drone Remote Sensing courses, Yale School of the Environment</p>
+            </div>
+            <div class="award-item">
+                <span class="year">2021-2023</span>
+                <h4>GIS Consultant</h4>
+                <p>Yale Libraries, providing workshops and individual consultations on geospatial analysis</p>
+            </div>
+        </section>
+
+        <section class="awards">
+            <h2>Selected Honors</h2>
+            <div class="award-item">
+                <span class="year">2022</span>
+                <h4><a href="https://www.esri.com/en-us/lg/industry/education/stories/esri-eip-winners-demonstrate-geospatial-excellence" target="_blank">Esri Innovation Program Student of the Year (Global Winner)</a></h4>
+            </div>
+        </section>
+
+        <section class="contact">
+            <h2>Get in Touch</h2>
+            <div class="contact-links">
+                <a href="mailto:yichenyang8823@gmail.com">Email</a>
+                <a href="https://scholar.google.ca/citations?user=1WuBRIwAAAAJ&hl=en&oi=ao" target="_blank">Scholar</a>
+                <a href="https://github.com/yichenyanggeo" target="_blank">GitHub</a>
+                <a href="https://www.linkedin.com/in/yichen-yang-509b15172/" target="_blank">LinkedIn</a>
+                <a href="https://x.com/yichenyang_geo" target="_blank">X/Twitter</a>
+            </div>
+        </section>
+
+        <footer>
+            <p>© 2026 Yichen Yang · All Rights Reserved</p>
+            <p style="margin-top:8px;font-size:12px;">Research tools developed at Yale University for educational purposes</p>
+        </footer>
+    </div>
+    <script>
+        (function () {
+            const canvas = document.getElementById('topo-bg');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            function hash(x, y) { let n = x * 374761393 + y * 668265263; n = Math.imul(n ^ (n >>> 13), 1274126177); return ((n ^ (n >>> 16)) >>> 0) / 0xffffffff; }
+            function smoothNoise(x, y) { const ix = Math.floor(x), iy = Math.floor(y); const fx = x - ix, fy = y - iy; const ux = fx*fx*(3-2*fx), uy = fy*fy*(3-2*fy); const a = hash(ix,iy), b = hash(ix+1,iy), c = hash(ix,iy+1), d = hash(ix+1,iy+1); return a+(b-a)*ux+(c-a)*uy+(a-b-c+d)*ux*uy; }
+            function fractalNoise(x, y) { let v=0, amp=1, freq=1, total=0; for(let i=0;i<6;i++){v+=smoothNoise(x*freq,y*freq)*amp;total+=amp;amp*=0.52;freq*=2.1;} return v/total; }
+            const GRID=2, cols=Math.ceil(canvas.width/GRID)+2, rows=Math.ceil(canvas.height/GRID)+2, SCALE=0.018;
+            const field = Array.from({length:rows},(_,r)=>Array.from({length:cols},(_,c)=>fractalNoise(c*SCALE,r*SCALE)));
+            function interp(a,b,l){if(Math.abs(b-a)<1e-10)return 0.5;return Math.max(0,Math.min(1,(l-a)/(b-a)));}
+            function getSegments(tl,tr,br,bl,level,x0,y0){const idx=(tl>level?8:0)|(tr>level?4:0)|(br>level?2:0)|(bl>level?1:0);if(idx===0||idx===15)return[];const top={x:x0+interp(tl,tr,level)*GRID,y:y0},right={x:x0+GRID,y:y0+interp(tr,br,level)*GRID},bottom={x:x0+interp(bl,br,level)*GRID,y:y0+GRID},left={x:x0,y:y0+interp(tl,bl,level)*GRID};const T=top,R=right,B=bottom,L=left;const cases={1:[[L,B]],2:[[B,R]],3:[[L,R]],4:[[T,R]],5:[[T,L],[B,R]],6:[[T,B]],7:[[T,L]],8:[[T,L]],9:[[T,B]],10:[[T,R],[L,B]],11:[[T,R]],12:[[L,R]],13:[[B,R]],14:[[L,B]]};return cases[idx]||[];}
+            const levels=[];for(let l=0.08;l<0.95;l+=0.02)levels.push(l);
+            levels.forEach((level,li)=>{const isMajor=li%5===0;ctx.strokeStyle='#2d5f3f';ctx.globalAlpha=isMajor?0.14:0.07;ctx.lineWidth=isMajor?1.4:0.7;ctx.beginPath();for(let r=0;r<rows-1;r++){for(let c=0;c<cols-1;c++){const segs=getSegments(field[r][c],field[r][c+1],field[r+1][c+1],field[r+1][c],level,c*GRID,r*GRID);segs.forEach(([p1,p2])=>{ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);});}}ctx.stroke();});
+            ctx.globalAlpha=1;
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,2418 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>US Corn - Interactive Dashboard</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- Plotly for time series -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        body,
+        input,
+        select,
+        button,
+        textarea,
+        optgroup,
+        option,
+        .custom-dropdown-button,
+        .custom-dropdown-item,
+        .custom-dropdown-group-label,
+        .legend,
+        .info-row,
+        #county-info,
+        #loading,
+        .search-result-item,
+        .section-title,
+        .control-group label,
+        .county-tooltip,
+        .leaflet-tooltip {
+            font-family: 'Roboto Condensed', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+        }
+
+        body.selecting-mode {
+            cursor: crosshair !important;
+        }
+
+        body.selecting-mode * {
+            cursor: crosshair !important;
+        }
+
+        #header {
+            background: linear-gradient(135deg, #1a5847 0%, #2d7a5f 100%);
+            color: white;
+            padding: 18px 24px;
+            box-shadow: 0 2px 8px rgba(26, 88, 71, 0.15);
+        }
+
+        #header h1 {
+            font-size: 23px;
+            font-weight: 400;
+            letter-spacing: -0.3px;
+        }
+
+        #main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            background: #fafaf8;
+        }
+
+        #sidebar {
+            width: 380px;
+            background: #f0f5f3;
+            padding: 24px 20px;
+            border-right: 1px solid #d8e4df;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        #map-container {
+            flex: 1;
+            position: relative;
+            background: white;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Remove blue outline from Leaflet map */
+        .leaflet-container {
+            outline: none !important;
+        }
+
+        .leaflet-interactive {
+            outline: none !important;
+        }
+
+        path.leaflet-interactive {
+            outline: none !important;
+        }
+
+        #bottom-container {
+            display: flex;
+            height: 400px;
+            border-top: 2px solid #d8e4df;
+            background: #fafaf8;
+        }
+
+        #timeseries-sidebar {
+            width: 380px;
+            background: #f0f5f3;
+            padding: 24px 20px;
+            border-right: 1px solid #d8e4df;
+            overflow-y: auto;
+        }
+
+        #timeseries-container {
+            flex: 1;
+            background: white;
+            position: relative;
+        }
+
+        #plot-placeholder {
+            position: absolute;
+            top: 40px;
+            left: 40px;
+            right: 40px;
+            bottom: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fafaf8;
+            border: 2px dashed #d8e4df;
+            margin: 20px;
+            border-radius: 12px;
+        }
+
+        #plot-placeholder-content {
+            text-align: center;
+            color: #a8b5b0;
+        }
+
+        #plot-placeholder-content svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 12px;
+            opacity: 0.4;
+            stroke: #a8b5b0;
+        }
+
+        #plot-placeholder-content p {
+            font-size: 20px;
+            font-weight: 400;
+            margin: 0;
+            color: #7a8a84;
+        }
+
+        #county-info-sidebar {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 340px;
+            max-height: calc(100% - 32px);
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(26, 88, 71, 0.12);
+            border: 1px solid #e8ede9;
+            z-index: 1000;
+            display: none;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        #county-info-sidebar.collapsed {
+            height: 54px;
+            overflow: hidden;
+        }
+
+        #county-info-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            background: #f0f5f3;
+            border-bottom: 1px solid #e8ede9;
+        }
+
+        #county-info-header h3 {
+            font-size: 15px;
+            color: #1a5847;
+            font-weight: 400;
+            margin: 0;
+            flex: 1;
+            letter-spacing: -0.2px;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        #collapse-btn,
+        #clear-btn {
+            background: none;
+            border: none;
+            font-size: 16px;
+            color: #7a8a84;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s;
+            border-radius: 4px;
+        }
+
+        #collapse-btn:hover {
+            color: #1a5847;
+            background: #e8ede9;
+        }
+
+        #clear-btn {
+            color: #1a5847;
+        }
+
+        #clear-btn:hover {
+            color: #145240;
+            background: #e8ede9;
+        }
+
+        #county-info {
+            padding: 20px;
+            font-size: 12px;
+            overflow-y: auto;
+            max-height: calc(100% - 54px);
+        }
+
+        #plot-toggle {
+            position: absolute;
+            top: 50%;
+            right: 0;
+            transform: translateY(-50%);
+            padding: 10px 16px;
+            background: white;
+            border: 2px solid #1a5847;
+            border-right: none;
+            color: #1a5847;
+            border-radius: 6px 0 0 6px;
+            font-size: 13px;
+            font-weight: 400;
+            cursor: pointer;
+            z-index: 100;
+            transition: all 0.2s;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            letter-spacing: 1px;
+            white-space: nowrap;
+            min-width: 40px;
+        }
+
+        #plot-toggle:hover {
+            background: #f0f5f3;
+            border-color: #145240;
+            color: #145240;
+            padding-left: 18px;
+        }
+
+        #plot-toggle.active {
+            background: #f0f5f3;
+            border-color: #145240;
+            color: #145240;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+            font-family: 'Roboto Condensed', sans-serif;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 400;
+            font-size: 15px;
+            color: #1a5847;
+            letter-spacing: -0.1px;
+        }
+
+        .control-group select,
+        .control-group input[type="date"] {
+            width: 100%;
+            padding: 11px 14px;
+            border: 2px solid #5fa885;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 400;
+            background: #f8fdfb;
+            color: #1a5847;
+            transition: all 0.2s;
+            font-family: 'Roboto Condensed', sans-serif;
+            appearance: none;
+            cursor: pointer;
+        }
+
+        .control-group select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%231a5847' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 36px;
+        }
+
+        .control-group select:focus,
+        .control-group input[type="date"]:focus {
+            outline: none;
+            border-color: #1a5847;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(26, 88, 71, 0.1);
+        }
+
+        .control-group input[type="date"] {
+            font-family: 'Roboto Condensed', sans-serif;
+        }
+
+        .control-group input[type="text"] {
+            width: 100%;
+            padding: 6px 8px;
+            border: 2px solid #5fa885;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 400;
+            font-family: 'Roboto Condensed', sans-serif;
+            transition: all 0.2s;
+        }
+
+        .control-group input[type="text"]:focus {
+            outline: none;
+            border-color: #1a5847;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(26, 88, 71, 0.1);
+        }
+
+        .control-group input[type="text"]:disabled {
+            background: #e8ede9;
+            cursor: not-allowed;
+        }
+
+        /* Custom greenish checkbox styling */
+        .control-group input[type="checkbox"] {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid #5fa885;
+            border-radius: 4px;
+            background: #f8fdfb;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+        }
+
+        .control-group input[type="checkbox"]:hover {
+            border-color: #1a5847;
+        }
+
+        .control-group input[type="checkbox"]:checked {
+            background: #1a5847;
+            border-color: #1a5847;
+        }
+
+        .control-group input[type="checkbox"]:checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .control-group input[type="checkbox"]:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(26, 88, 71, 0.1);
+        }
+
+        /* Checkbox with tooltip */
+        .checkbox-with-tooltip {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .checkbox-tooltip {
+            visibility: hidden;
+            position: absolute;
+            top: 50%;
+            left: calc(100% + 8px);
+            transform: translateY(-50%);
+            background: rgba(26, 88, 71, 0.95);
+            color: #ffffff;
+            padding: 6px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .checkbox-tooltip::after {
+            content: '';
+            position: absolute;
+            right: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            border: 5px solid transparent;
+            border-right-color: rgba(26, 88, 71, 0.95);
+        }
+
+        .checkbox-with-tooltip:hover .checkbox-tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Action buttons with solid background */
+        #update-map,
+        #update-plot {
+            width: 100%;
+            padding: 12px;
+            background: #1a5847;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 400;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 6px rgba(26, 88, 71, 0.2);
+        }
+
+        #update-map:hover,
+        #update-plot:hover {
+            background: #145240;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(26, 88, 71, 0.25);
+        }
+
+        #update-map:active,
+        #update-plot:active {
+            transform: translateY(0);
+        }
+
+        #update-map:disabled,
+        #update-plot:disabled {
+            background: #a8b5b0;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* Outline buttons - green border, transparent background */
+        #select-county-btn,
+        #next-date-btn {
+            width: 100%;
+            padding: 11px;
+            background: white;
+            color: #1a5847;
+            border: 2px solid #1a5847;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 400;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        #select-county-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        #select-county-btn:hover,
+        #next-date-btn:hover {
+            background: #f0f5f3;
+            border-color: #145240;
+            color: #145240;
+        }
+
+        #select-county-btn.active {
+            background: #f0f5f3;
+            border-color: #145240;
+            color: #145240;
+        }
+
+        #select-county-btn::before {
+            content: '+';
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        #select-county-btn.active::before {
+            content: '✓';
+        }
+
+        #next-date-btn.playing {
+            background: #f0f5f3;
+            border-color: #145240;
+            color: #145240;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        #next-date-btn.playing::before {
+            content: '⏸ ';
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                border-color: #1a5847;
+            }
+
+            50% {
+                border-color: #2d7a5f;
+            }
+        }
+
+        /* Search input styling */
+        .search-container {
+            position: relative;
+        }
+
+        #county-search {
+            width: 100%;
+            padding: 11px 14px 11px 40px;
+            border: 2px solid #5fa885;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 400;
+            background: #f8fdfb;
+            color: #1a5847;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%231a5847' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: 14px center;
+            transition: all 0.2s;
+            font-family: 'Roboto Condensed', sans-serif;
+        }
+
+        #county-search::placeholder {
+            color: #7a8a84;
+            font-weight: 400;
+        }
+
+        #county-search:focus {
+            outline: none;
+            border-color: #1a5847;
+            background-color: white;
+            box-shadow: 0 0 0 3px rgba(26, 88, 71, 0.1);
+        }
+
+        #search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            max-height: 250px;
+            overflow-y: auto;
+            background: white;
+            border: 2px solid #5fa885;
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(26, 88, 71, 0.15);
+            margin-top: -2px;
+        }
+
+        #search-results.show {
+            display: block;
+        }
+
+        .search-result-item {
+            padding: 11px 14px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f5f3;
+            font-size: 15px;
+            font-weight: 400;
+            transition: background 0.15s;
+            color: #2d4a40;
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-result-item:hover,
+        .search-result-item.selected {
+            background: #f0f5f3;
+        }
+
+        .search-result-item .county-name {
+            font-weight: 400;
+            color: #1a5847;
+        }
+
+        .search-result-item .state-name {
+            color: #7a8a84;
+            font-size: 15px;
+            margin-left: 6px;
+            font-weight: 400;
+        }
+
+        .no-results {
+            padding: 16px;
+            text-align: center;
+            color: #7a8a84;
+            font-size: 15px;
+            font-weight: 400;
+        }
+
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 18px 28px;
+            border-radius: 10px;
+            box-shadow: 0 4px 16px rgba(26, 88, 71, 0.15);
+            display: none;
+            z-index: 1000;
+            font-size: 15px;
+            font-weight: 400;
+            text-align: center;
+            transition: opacity 0.3s ease;
+        }
+
+        #loading.loading-state {
+            background: transparent;
+            color: #1a5847;
+            border: none;
+            box-shadow: none;
+            text-shadow:
+                -1px -1px 3px white,
+                1px -1px 3px white,
+                -1px 1px 3px white,
+                1px 1px 3px white,
+                0 0 8px white,
+                0 0 12px rgba(255, 255, 255, 0.8);
+            font-weight: 500;
+        }
+
+        #loading.error-state {
+            background: rgba(177, 122, 126, 0.92);
+            color: white;
+        }
+
+        #loading.info-state {
+            background: rgba(95, 168, 133, 0.95);
+            color: white;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f5f3;
+            gap: 12px;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-row span {
+            font-size: 15px;
+            flex: 1;
+            color: #7a8a84;
+            font-weight: 400;
+        }
+
+        .info-row strong {
+            font-size: 15px;
+            text-align: right;
+            white-space: nowrap;
+            color: #1a5847;
+            font-weight: 400;
+        }
+
+        .legend {
+            padding: 12px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 3px 12px rgba(26, 88, 71, 0.12);
+            border: 1px solid #e8ede9;
+            line-height: 20px;
+            font-size: 15px;
+        }
+
+        .legend strong {
+            color: #1a5847;
+            font-weight: 400;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+
+        .legend-color {
+            width: 22px;
+            height: 16px;
+            margin-right: 10px;
+            border: 1px solid #d8e4df;
+            border-radius: 3px;
+        }
+
+        .legend-item span {
+            color: #2d4a40;
+            font-weight: 400;
+        }
+
+        .legend small {
+            color: #7a8a84;
+            font-weight: 400;
+        }
+
+        .section-title {
+            font-size: 15px;
+            font-weight: 400;
+            color: #1a5847;
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #5fa885;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .county-tooltip {
+            background: rgba(26, 88, 71, 0.95);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 7px 11px;
+            font-size: 15px;
+            font-weight: 400;
+            box-shadow: 0 3px 8px rgba(26, 88, 71, 0.3);
+        }
+
+        .leaflet-tooltip-top:before {
+            border-top-color: rgba(26, 88, 71, 0.95);
+        }
+
+        #colormap-preview {
+            width: 100%;
+            height: 24px;
+            margin-top: 8px;
+            border-radius: 6px;
+            border: 2px solid #5fa885;
+            transition: all 0.3s ease;
+        }
+
+        /* Optgroup styling */
+        optgroup {
+            font-weight: 700;
+            font-style: normal;
+            color: #1a5847;
+            background: #f0f5f3;
+        }
+
+        option {
+            color: #2d4a40;
+            background: white;
+            font-weight: 600;
+            padding: 10px;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f0f5f3;
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #5fa885;
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #1a5847;
+        }
+
+        /* Custom Dropdown Styles */
+        .custom-dropdown {
+            position: relative;
+            width: 100%;
+        }
+
+        .custom-dropdown-button {
+            width: 100%;
+            padding: 11px 40px 11px 14px;
+            border: 2px solid #5fa885;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 400;
+            background: #f8fdfb;
+            color: #1a5847;
+            font-family: 'Roboto Condensed', sans-serif;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .custom-dropdown-button::after {
+            content: '';
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 6px solid #1a5847;
+            transition: transform 0.2s;
+        }
+
+        .custom-dropdown.open .custom-dropdown-button::after {
+            transform: translateY(-50%) rotate(180deg);
+        }
+
+        .custom-dropdown-button:hover {
+            border-color: #1a5847;
+            background: white;
+        }
+
+        .custom-dropdown.open .custom-dropdown-button {
+            border-color: #1a5847;
+            background: white;
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+
+        .custom-dropdown-panel {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            max-height: 320px;
+            overflow-y: auto;
+            background: white;
+            border: 2px solid #1a5847;
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 4px 12px rgba(26, 88, 71, 0.15);
+        }
+
+        .custom-dropdown.open .custom-dropdown-panel {
+            display: block;
+        }
+
+        .custom-dropdown-group-label {
+            padding: 10px 14px 6px;
+            font-size: 15px;
+            font-weight: 400;
+            color: #7a8a84;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: #f0f5f3;
+            border-top: 1px solid #e8ede9;
+            white-space: nowrap;
+        }
+
+        .custom-dropdown-group-label:first-child {
+            border-top: none;
+        }
+
+        .custom-dropdown-item {
+            padding: 11px 14px 11px 38px;
+            font-size: 15px;
+            font-weight: 400;
+            color: #2d4a40;
+            cursor: pointer;
+            transition: background 0.15s;
+            position: relative;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .custom-dropdown-item:hover {
+            background: #f0f5f3;
+        }
+
+        .custom-dropdown-item.selected {
+            background: #f8fdfb;
+            color: #1a5847;
+            font-weight: 400;
+        }
+
+        .custom-dropdown-item .check {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #1a5847;
+            font-weight: bold;
+        }
+
+        .custom-dropdown-panel::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .custom-dropdown-panel::-webkit-scrollbar-track {
+            background: #f0f5f3;
+        }
+
+        .custom-dropdown-panel::-webkit-scrollbar-thumb {
+            background: #5fa885;
+            border-radius: 4px;
+        }
+
+        .custom-dropdown-panel::-webkit-scrollbar-thumb:hover {
+            background: #1a5847;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="header">
+        <h1>US CORN BELT MONITORING & YIELD FORECASTING</h1>
+    </div>
+
+    <div id="main-container">
+        <div id="sidebar">
+            <div class="section-title">Variable Selection</div>
+            <div class="control-group">
+                <label for="variable-select">VARIABLE</label>
+                <select id="variable-select">
+                    <optgroup label="── In-Season Variables ──">
+                        <option value="NDVI_mean">NDVI</option>
+                        <option value="NDWI_mean">NDWI</option>
+                        <option value="EVI_mean">EVI (Enhanced Vegetation)</option>
+                        <option value="GCI_mean">GCI (Green Chlorophyll)</option>
+                        <option value="LST_Day_mean">Daytime Land Surface Temperature</option>
+                        <option value="LST_Night_mean">Nighttime Land Surface Temperature</option>
+                        <option value="ppt">Daily Precipitation</option>
+                        <option value="tmean">Daily Mean Air Temperature</option>
+                        <option value="tmax">Daily Maximum Air Temperature</option>
+                        <option value="tmin">Daily Minimum Air Temperature</option>
+                        <option value="tdmean">Daily Mean Dewpoint Temperature</option>
+                        <option value="vpdmax">Daily Maximum Vapor Pressure Deficit</option>
+                        <option value="vpdmin">Daily Minimum Vapor Pressure Deficit</option>
+                        <option value="ET_mm">Daily Evapotranspiration</option>
+                        <option value="WS">Water Stress (ET/PET)</option>
+                        <option value="PDSI">Palmer Drought Severity Index</option>
+                        <option value="sm_layer1">Soil Water Content 0-7 cm</option>
+                        <option value="sm_layer2">Soil Water Content 7-28 cm</option>
+                        <option value="sm_layer3">Soil Water Content 28-100 cm</option>
+                        <option value="sm_layer4">Soil Water Content 100-289 cm</option>
+                        <option value="smdi">Soil Moisture Deficit Index</option>
+                        <option value="predicted_yield">Predicted Yield</option>
+                    </optgroup>
+                    <optgroup label="── Annual Variables ──">
+                        <option value="yield_bu_per_acre">Reported Yield (Ground Truth)</option>
+                        <option value="AWC_mean">Available Water Holding Capacity</option>
+                        <option value="SOM_mean">Soil Organic Matter</option>
+                        <option value="CEC_mean">Cation Exchange Capacity</option>
+                        <option value="nitrogen_0_30cm_mean">Nitrogen 0-30 cm</option>
+                        <option value="nitrogen_0_100cm_mean">Nitrogen 0-100 cm</option>
+                        <option value="EDD">Extreme Degree Days</option>
+                    </optgroup>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div class="checkbox-with-tooltip">
+                        <input type="checkbox" id="anomaly-mode">
+                        <span class="checkbox-tooltip">Compare to historical values at same time of year</span>
+                    </div>
+                    <label for="anomaly-mode" style="margin: 0; cursor: pointer;">Historical Anomaly</label>
+                </div>
+                <small style="font-size: 12px; color: #7a8a84; margin-top: 4px; display: block;">
+                    Only available for in-season variables
+                </small>
+            </div>
+
+            <div style="height: 30px;"></div>
+
+            <div class="section-title">Map Controls</div>
+
+            <div class="control-group">
+                <label for="date-select">Select Date (per 8 days)</label>
+                <select id="date-select">
+                    <!-- Will be populated by JavaScript -->
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="colormap-select">Color Scheme</label>
+                <select id="colormap-select">
+                    <option value="reds">Reds</option>
+                    <option value="greens">Greens</option>
+                    <option value="blues">Blues</option>
+                    <option value="viridis">Viridis</option>
+                    <option value="plasma">Plasma</option>
+                    <option value="jet">Jet</option>
+                    <option value="rdylgn">Red-Yellow-Green</option>
+                    <option value="browns">Browns</option>
+                </select>
+                <div id="colormap-preview"></div>
+
+                <!-- Min/Max Range Controls with Auto Range checkbox -->
+                <div style="margin-top: 12px; display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 15px; color: #1a5847;">Min:</span>
+                    <input type="text" id="range-min" disabled style="width: 60px;">
+                    <span style="font-size: 15px; color: #1a5847; margin-left: 4px;">Max:</span>
+                    <input type="text" id="range-max" disabled style="width: 60px;">
+                    <div class="checkbox-with-tooltip" style="margin-left: 8px;">
+                        <input type="checkbox" id="use-default-range" checked>
+                        <span class="checkbox-tooltip">Auto Range</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <button id="next-date-btn">▶ Next Date</button>
+            </div>
+
+            <div class="control-group">
+                <button id="update-map">Update Map</button>
+            </div>
+        </div>
+
+        <div id="map-container">
+            <div id="map"></div>
+            <div id="loading">Loading data...</div>
+
+            <!-- County info as floating collapsible panel -->
+            <div id="county-info-sidebar">
+                <div id="county-info-header">
+                    <h3>Selected County</h3>
+                    <div class="header-buttons">
+                        <button id="clear-btn" title="Clear selection">🗑️</button>
+                        <button id="collapse-btn">−</button>
+                    </div>
+                </div>
+                <div id="county-info">
+                    <div id="county-details"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="bottom-container">
+        <div id="timeseries-sidebar">
+            <div class="section-title">Time Series Controls</div>
+
+            <div class="control-group">
+                <label>Select County</label>
+                <button id="select-county-btn">Select from Map</button>
+                <div class="search-container">
+                    <input type="text" id="county-search" placeholder="Search counties...">
+                    <div id="search-results"></div>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label for="ts-start">Start Date</label>
+                <input type="date" id="ts-start" value="2024-06-01">
+            </div>
+
+            <div class="control-group">
+                <label for="ts-end">End Date</label>
+                <input type="date" id="ts-end" value="2024-11-15">
+            </div>
+
+            <div class="control-group">
+                <button id="update-plot">Update Plot</button>
+            </div>
+        </div>
+
+        <div id="timeseries-container">
+            <button id="plot-toggle">Seasonal Comparison</button>
+            <div id="plot-placeholder">
+                <div id="plot-placeholder-content">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 3v18h18" />
+                        <path d="M18 17l-4-4-4 4-4-4" />
+                    </svg>
+                    <p>No data added yet</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        // Configuration
+        const CONFIG = {
+            // geojsonUrl: `https://storage.googleapis.com/yyprocessing/CROP_YIELD_ONLINE/cornbelt_counties.geojson?t=${Date.now()}`,  // GCS (deprecated)
+            geojsonUrl: `https://pub-dfaabd24b761458c8928b8b75124bb9a.r2.dev/Dashboards/county_level/cornbelt_counties.geojson?t=${Date.now()}`,
+            apiMapData: 'https://us-central1-yyresearch.cloudfunctions.net/get-map-data',
+            apiTimeSeries: 'https://us-central1-yyresearch.cloudfunctions.net/get-county-timeseries'
+        };
+
+        const VARIABLE_DISPLAY_NAMES = {
+            // In-Season Variables
+            'NDVI_mean': 'NDVI',
+            'NDWI_mean': 'NDWI',
+            'EVI_mean': 'EVI',
+            'GCI_mean': 'GCI',
+            'LST_Day_mean': 'Daytime Temperature (°C)',
+            'LST_Night_mean': 'Nighttime Temperature (°C)',
+            'ppt': 'Precipitation (mm)',
+            'tmean': 'Daily Mean Air Temperature (°C)',
+            'tmax': 'Daily Maximum Air Temperature (°C)',
+            'tmin': 'Daily Minimum Air Temperature (°C)',
+            'tdmean': 'Daily Mean Dewpoint Temperature (°C)',
+            'vpdmax': 'Daily Maximum Vapor Pressure Deficit (hPa)',
+            'vpdmin': 'Daily Minimum Vapor Pressure Deficit (hPa)',
+            'ET_mm': 'Daily Evapotranspiration (mm)',
+            'WS': 'Water Stress (ET/PET)',
+            'PDSI': 'Palmer Drought Severity Index',
+            'sm_layer1': 'Soil Water Content 0-7 cm (m³/m³)',
+            'sm_layer2': 'Soil Water Content 7-28 cm (m³/m³)',
+            'sm_layer3': 'Soil Water Content 28-100 cm (m³/m³)',
+            'sm_layer4': 'Soil Water Content 100-289 cm (m³/m³)',
+            'smdi': 'Soil Moisture Deficit Index',
+            'predicted_yield': 'Predicted Yield (bu/ac)',
+
+            // Annual Variables
+            'yield_bu_per_acre': 'Reported Yield (bu/ac)',
+            'AWC_mean': 'Available Water Holding Capacity (cm)',
+            'SOM_mean': 'Soil Organic Matter (kg/m²)',
+            'CEC_mean': 'Cation Exchange Capacity (cmol/kg)',
+            'nitrogen_0_30cm_mean': 'Nitrogen 0-30 cm (g/kg)',
+            'nitrogen_0_100cm_mean': 'Nitrogen 0-100 cm (g/kg)',
+            'EDD': 'Extreme Degree Days (°C·days)'
+        };
+
+        const COLOR_SCHEMES = {
+            'reds': ['#fee5d9', '#fcbba1', '#fc8d59', '#e34a33', '#b30000'],
+            'greens': ['#edf8e9', '#bae4b3', '#74c476', '#31a354', '#006d2c'],
+            'blues': ['#eff3ff', '#bdd7e7', '#6baed6', '#3182bd', '#08519c'],
+            'viridis': ['#fde724', '#90d743', '#35b779', '#21918c', '#31688e', '#443983'],
+            'plasma': ['#f0f921', '#fca636', '#e16462', '#b12a90', '#6a00a8', '#0d0887'],
+            'jet': ['#00007f', '#0000ff', '#00ffff', '#00ff00', '#ffff00', '#ff0000', '#7f0000'],
+            'rdylgn': ['#d73027', '#fc8d59', '#fee08b', '#d9ef8b', '#91cf60', '#1a9850'],
+            'browns': ['#f6e8c3', '#dfc27d', '#bf812d', '#8c510a', '#543005']
+        };
+
+        let currentColorScheme = 'reds';
+
+        // Anomaly mode state
+        let anomalyMode = false;
+
+        // Plot mode state
+        let plotMode = 'chronological';
+        let currentPlotData = null;
+        let currentPlotVariable = null;
+
+        // Selection mode state
+        let selectionMode = false;
+        let panelCollapsed = false;
+
+        // Search state
+        let searchSelectedIndex = -1;
+        let filteredCounties = [];
+
+        // Highlight state
+        let highlightedLayer = null;
+
+        // Selected county info
+        let selectedFips = null;
+        let selectedCountyName = null;
+        let selectedStateName = null;
+
+        // Range control state
+        let useDefaultRange = true;
+        let customMin = null;
+        let customMax = null;
+
+        // Store custom dropdown instances
+        let customDropdowns = {};
+
+        // Check if variable is in-season (has percentile version)
+        function isInSeasonVariable(variable) {
+            const annualVariables = [
+                'yield_bu_per_acre',
+                'AWC_mean',
+                'SOM_mean',
+                'CEC_mean',
+                'nitrogen_0_30cm_mean',
+                'nitrogen_0_100cm_mean',
+                'EDD'
+            ];
+            return !annualVariables.includes(variable);
+        }
+
+        // Get actual variable name (add _pctile suffix if in anomaly mode)
+        function getActualVariable(variable) {
+            if (anomalyMode && isInSeasonVariable(variable)) {
+                return variable + '_pctile';
+            }
+            return variable;
+        }
+
+        function updateColormapPreview() {
+            const scheme = currentColorScheme;
+            const colors = COLOR_SCHEMES[scheme];
+            const gradient = `linear-gradient(to right, ${colors.join(', ')})`;
+            document.getElementById('colormap-preview').style.background = gradient;
+        }
+
+        // Transform data values based on variable type
+        function transformValue(variable, value) {
+            if (value === null || value === undefined) return null;
+
+            // Divide nitrogen values by 1000 to convert to g/kg
+            if (variable === 'nitrogen_0_30cm_mean' || variable === 'nitrogen_0_100cm_mean') {
+                return value / 1000;
+            }
+
+            return value;
+        }
+
+        // Helper: Convert YYYY-MM-DD to YYYYMMDD
+        function dateToYYYYMMDD(dateStr) {
+            return dateStr.replace(/-/g, '');
+        }
+
+        // Helper: Convert YYYYMMDD to YYYY-MM-DD
+        function yyyymmddToDate(yyyymmdd) {
+            return `${yyyymmdd.slice(0, 4)}-${yyyymmdd.slice(4, 6)}-${yyyymmdd.slice(6, 8)}`;
+        }
+
+        // Generate all valid dekad dates from 2001 to current date
+        function generateDekadDates() {
+            const dates = [];
+            const currentYear = new Date().getFullYear();
+            const currentDOY = Math.floor((Date.now() - new Date(currentYear, 0, 0)) / 86400000);
+
+            for (let year = 2001; year <= currentYear; year++) {
+                for (let dekad = 1; dekad <= 45; dekad++) {
+                    const doy = dekad * 8;
+
+                    if (year === currentYear && doy > currentDOY) continue;
+
+                    const date = new Date(year, 0, doy);
+
+                    const y = date.getFullYear();
+                    const m = String(date.getMonth() + 1).padStart(2, '0');
+                    const d = String(date.getDate()).padStart(2, '0');
+                    const dateStr = `${y}${m}${d}`;
+
+                    const displayStr = date.toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                    });
+
+                    dates.push({ value: dateStr, display: `${displayStr}` });
+                }
+            }
+
+            return dates.reverse();
+        }
+
+        // Populate date dropdown
+        function populateDateDropdown() {
+            const select = document.getElementById('date-select');
+            const dates = generateDekadDates();
+
+            dates.forEach(date => {
+                const option = document.createElement('option');
+                option.value = date.value;
+                option.textContent = date.display;
+                select.appendChild(option);
+            });
+
+            select.value = dates[0].value;
+        }
+
+        populateDateDropdown();
+        updateColormapPreview();
+
+        // Next date functionality
+        let playInterval = null;
+        let isPlaying = false;
+
+        async function advanceToNextDate() {
+            const select = document.getElementById('date-select');
+            const currentIndex = select.selectedIndex;
+
+            if (currentIndex === 0) {
+                stopPlaying();
+                return false;
+            }
+
+            select.selectedIndex = currentIndex - 1;
+
+            // Update custom dropdown display
+            if (customDropdowns['date-select']) {
+                customDropdowns['date-select'].syncFromSelect();
+            }
+
+            await updateMap();
+
+            return true;
+        }
+
+        async function startPlaying() {
+            if (isPlaying) return;
+
+            isPlaying = true;
+            const btn = document.getElementById('next-date-btn');
+            btn.classList.add('playing');
+            btn.textContent = 'Pause';
+
+            await playNextDate();
+        }
+
+        async function playNextDate() {
+            if (!isPlaying) return;
+
+            const canContinue = await advanceToNextDate();
+            if (!canContinue) {
+                stopPlaying();
+                return;
+            }
+
+            // Wait 1 second after data loads, then continue
+            setTimeout(() => {
+                if (isPlaying) {
+                    playNextDate();
+                }
+            }, 500);
+        }
+
+        function stopPlaying() {
+            if (!isPlaying) return;
+
+            isPlaying = false;
+            const btn = document.getElementById('next-date-btn');
+            btn.classList.remove('playing');
+            btn.textContent = '▶ Next Date';
+
+            if (playInterval) {
+                clearInterval(playInterval);
+                playInterval = null;
+            }
+        }
+
+        function togglePlaying() {
+            if (isPlaying) {
+                stopPlaying();
+            } else {
+                startPlaying();
+            }
+        }
+
+        // Toggle selection mode
+        function toggleSelectionMode() {
+            selectionMode = !selectionMode;
+            const btn = document.getElementById('select-county-btn');
+
+            if (selectionMode) {
+                btn.classList.add('active');
+                btn.textContent = 'Click on County';
+                document.body.classList.add('selecting-mode');
+            } else {
+                btn.classList.remove('active');
+                btn.textContent = 'Select from Map';
+                document.body.classList.remove('selecting-mode');
+            }
+        }
+
+        // Toggle panel collapse
+        function togglePanelCollapse() {
+            const panel = document.getElementById('county-info-sidebar');
+            const btn = document.getElementById('collapse-btn');
+
+            panelCollapsed = !panelCollapsed;
+
+            if (panelCollapsed) {
+                panel.classList.add('collapsed');
+                btn.textContent = '+';
+            } else {
+                panel.classList.remove('collapsed');
+                btn.textContent = '−';
+            }
+        }
+
+        // Highlight selected county
+        function highlightCounty(fips) {
+            if (highlightedLayer) {
+                countyLayer.resetStyle(highlightedLayer);
+            }
+
+            countyLayer.eachLayer(layer => {
+                if (layer.feature.properties.fips === fips) {
+                    layer.setStyle({
+                        weight: 4,
+                        color: '#d4a5a8',
+                        fillOpacity: 0.7
+                    });
+                    layer.bringToFront();
+                    highlightedLayer = layer;
+                }
+            });
+        }
+
+        // Show/hide plot placeholder
+        function showPlotPlaceholder() {
+            const placeholder = document.getElementById('plot-placeholder');
+            if (placeholder) {
+                placeholder.style.display = 'flex';
+            }
+        }
+
+        function hidePlotPlaceholder() {
+            const placeholder = document.getElementById('plot-placeholder');
+            if (placeholder) {
+                placeholder.style.display = 'none';
+            }
+        }
+
+        function clearSelection() {
+            document.getElementById('county-info-sidebar').style.display = 'none';
+
+            if (highlightedLayer) {
+                countyLayer.resetStyle(highlightedLayer);
+                highlightedLayer = null;
+            }
+
+            Plotly.purge('timeseries-container');
+            showPlotPlaceholder();
+
+            selectedFips = null;
+            selectedCountyName = null;
+            selectedStateName = null;
+            currentPlotData = null;
+            currentPlotVariable = null;
+
+            const container = document.getElementById('timeseries-container');
+            if (!document.getElementById('plot-toggle')) {
+                const btn = document.createElement('button');
+                btn.id = 'plot-toggle';
+                btn.textContent = 'Seasonal Comparison';
+                btn.addEventListener('click', togglePlotMode);
+                container.appendChild(btn);
+            }
+        }
+
+        function showCountyPanel(feature) {
+            const panel = document.getElementById('county-info-sidebar');
+
+            selectedFips = feature.properties.fips;
+            selectedCountyName = feature.properties.NAMELSAD;
+            selectedStateName = feature.properties.STATE_NAME;
+
+            document.getElementById('county-details').innerHTML = `
+        <div class="info-row">
+            <span>County:</span>
+            <strong>${feature.properties.NAMELSAD}</strong>
+        </div>
+        <div class="info-row">
+            <span>State:</span>
+            <strong>${feature.properties.STATE_NAME}</strong>
+        </div>
+        <div class="info-row">
+            <span>FIPS:</span>
+            <strong>${feature.properties.fips}</strong>
+        </div>
+        <hr style="margin: 10px 0; border: none; border-top: 1px solid #dee2e6;">
+        <div style="font-size: 12px; color: #6c757d; margin-bottom: 5px;">
+            <strong>Soil Properties (10-year avg):</strong>
+        </div>
+        <div class="info-row">
+            <span>Available Water Holding Capacity:</span>
+            <strong>${feature.properties.AWC_mean?.toFixed(2) || 'N/A'} cm</strong>
+        </div>
+        <div class="info-row">
+            <span>Soil Organic Matter:</span>
+            <strong>${feature.properties.SOM_mean?.toFixed(2) || 'N/A'} kg/m<sup>2</sup></strong>
+        </div>
+        <div class="info-row">
+            <span>Cation Exchange Capacity:</span>
+            <strong>${feature.properties.CEC_mean?.toFixed(2) || 'N/A'} cmol/kg</strong>
+        </div>
+        <div class="info-row">
+            <span>Nitrogen at Top 30 cm:</span>
+            <strong>${feature.properties.nitrogen_0_30cm_mean ? (feature.properties.nitrogen_0_30cm_mean / 1000).toFixed(2) : 'N/A'} g/kg</strong>
+        </div>
+        <div class="info-row">
+            <span>Irrigation Fraction:</span>
+            <strong>${(feature.properties.irrigation_fraction * 100)?.toFixed(1) || '0'}%</strong>
+        </div>
+    `;
+
+            panel.style.display = 'block';
+            panel.classList.remove('collapsed');
+            document.getElementById('collapse-btn').textContent = '−';
+            panelCollapsed = false;
+
+            highlightCounty(selectedFips);
+        }
+
+        // Search functionality
+        function filterCounties(searchTerm) {
+            if (!geojsonData) return [];
+
+            const term = searchTerm.toLowerCase().trim();
+
+            if (term === '') {
+                return geojsonData.features.map(f => ({
+                    fips: f.properties.fips,
+                    name: f.properties.NAMELSAD,
+                    state: f.properties.STATE_NAME,
+                    feature: f
+                })).sort((a, b) => {
+                    if (a.state !== b.state) return a.state.localeCompare(b.state);
+                    return a.name.localeCompare(b.name);
+                });
+            }
+
+            return geojsonData.features
+                .filter(f => {
+                    const countyName = f.properties.NAMELSAD.toLowerCase();
+                    const stateName = f.properties.STATE_NAME.toLowerCase();
+                    return countyName.includes(term) || stateName.includes(term);
+                })
+                .map(f => ({
+                    fips: f.properties.fips,
+                    name: f.properties.NAMELSAD,
+                    state: f.properties.STATE_NAME,
+                    feature: f
+                }))
+                .sort((a, b) => a.name.localeCompare(b.name));
+        }
+
+        function renderSearchResults(counties) {
+            const resultsDiv = document.getElementById('search-results');
+
+            if (counties.length === 0) {
+                resultsDiv.innerHTML = '<div class="no-results">No counties found</div>';
+                resultsDiv.classList.add('show');
+                return;
+            }
+
+            resultsDiv.innerHTML = counties.map((county, idx) => `
+                <div class="search-result-item ${idx === searchSelectedIndex ? 'selected' : ''}" data-index="${idx}">
+                    <span class="county-name">${county.name}</span>
+                    <span class="state-name">${county.state}</span>
+                </div>
+            `).join('');
+
+            resultsDiv.classList.add('show');
+
+            resultsDiv.querySelectorAll('.search-result-item').forEach((item, idx) => {
+                item.addEventListener('click', () => selectCountyFromSearch(counties[idx]));
+            });
+        }
+
+        function selectCountyFromSearch(county) {
+            showCountyPanel(county.feature);
+            loadTimeSeries();
+
+            document.getElementById('county-search').value = '';
+            document.getElementById('search-results').classList.remove('show');
+            searchSelectedIndex = -1;
+        }
+
+        // Initialize Leaflet map
+        const map = L.map('map').setView([41.5, -93.5], 5);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 18
+        }).addTo(map);
+
+        let countyLayer = null;
+        let countyData = null;
+        let geojsonData = null;
+        let legend = null;
+
+        // Color scale function
+        function getColor(value, p5, p95) {
+            if (value == null) return '#ccc';
+
+            const clampedValue = Math.max(p5, Math.min(p95, value));
+            const normalized = (clampedValue - p5) / (p95 - p5);
+
+            const colors = COLOR_SCHEMES[currentColorScheme];
+            const numColors = colors.length;
+
+            const segment = Math.min(Math.floor(normalized * numColors), numColors - 1);
+
+            return colors[segment];
+        }
+
+        // Style function for counties
+        function style(feature) {
+            const value = feature.properties.value;
+
+            if (!countyData) return { fillColor: '#ccc', weight: 1, opacity: 1, color: 'white', fillOpacity: 0.7 };
+
+            const values = countyData.map(d => d.value).filter(v => v != null && !isNaN(v)).sort((a, b) => a - b);
+            const p5 = values[Math.floor(values.length * 0.05)];
+            const p95 = values[Math.floor(values.length * 0.95)];
+
+            return {
+                fillColor: getColor(value, p5, p95),
+                weight: 1,
+                opacity: 1,
+                color: 'white',
+                fillOpacity: 0.7
+            };
+        }
+
+        // Highlight feature on hover
+        function highlightFeature(e) {
+            const layer = e.target;
+            if (layer !== highlightedLayer) {
+                layer.setStyle({
+                    weight: 3,
+                    color: '#666',
+                    fillOpacity: 0.9
+                });
+                layer.bringToFront();
+            }
+        }
+
+        // Reset highlight
+        function resetHighlight(e) {
+            const layer = e.target;
+            if (layer !== highlightedLayer) {
+                countyLayer.resetStyle(layer);
+            }
+        }
+
+        // Click handler
+        function onCountyClick(e) {
+            if (!selectionMode) return;
+
+            const feature = e.target.feature;
+            showCountyPanel(feature);
+            loadTimeSeries();
+        }
+
+        // Add event listeners to each feature
+        function onEachFeature(feature, layer) {
+            const stateName = feature.properties.STATE_NAME;
+            const countyName = feature.properties.NAMELSAD;
+
+            layer.bindTooltip(`${countyName}, ${stateName}`, {
+                permanent: false,
+                direction: 'top',
+                className: 'county-tooltip'
+            });
+
+            layer.on({
+                mouseover: highlightFeature,
+                mouseout: resetHighlight,
+                click: onCountyClick
+            });
+        }
+
+        // Load initial GeoJSON
+        fetch(CONFIG.geojsonUrl)
+            .then(r => r.json())
+            .then(data => {
+                geojsonData = data;
+                countyLayer = L.geoJSON(data, {
+                    style: style,
+                    onEachFeature: onEachFeature
+                }).addTo(map);
+            });
+
+        // Update map with new data
+        async function updateMap() {
+            const variable = document.getElementById('variable-select').value;
+
+            // Check if anomaly mode is on but variable is annual - turn it off
+            if (anomalyMode && !isInSeasonVariable(variable)) {
+                document.getElementById('anomaly-mode').checked = false;
+                anomalyMode = false;
+                showTemporaryMessage('Anomaly mode only works for in-season variables', 'info', 2000);
+            }
+
+            const actualVariable = getActualVariable(variable);
+            const date = document.getElementById('date-select').value;
+            currentColorScheme = document.getElementById('colormap-select').value;
+
+            // Validate custom range if not using default
+            if (!useDefaultRange) {
+                const rangeMinInput = document.getElementById('range-min');
+                const rangeMaxInput = document.getElementById('range-max');
+
+                const minVal = parseFloat(rangeMinInput.value);
+                const maxVal = parseFloat(rangeMaxInput.value);
+
+                if (isNaN(minVal) || isNaN(maxVal)) {
+                    showTemporaryMessage('Min and Max must be valid numbers', 'error', 3000);
+                    return;
+                }
+
+                if (rangeMinInput.value.trim() === '' || rangeMaxInput.value.trim() === '') {
+                    showTemporaryMessage('Both Min and Max values are required', 'error', 3000);
+                    return;
+                }
+
+                if (maxVal <= minVal) {
+                    showTemporaryMessage('Max must be greater than Min', 'error', 3000);
+                    return;
+                }
+
+                customMin = minVal;
+                customMax = maxVal;
+            }
+
+            const dateObj = new Date(date.slice(0, 4), date.slice(4, 6) - 1, date.slice(6, 8));
+            const dateDisplay = dateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+            showLoading(true, `Loading data - ${dateDisplay}`, 'loading');
+
+            try {
+                const url = `${CONFIG.apiMapData}?var=${actualVariable}&date=${date}`;
+                console.log('Fetching URL:', url);
+
+                const response = await fetch(url);
+                const text = await response.text();
+                const cleanedText = text.replace(/:\s*NaN/g, ': null');
+                const data = JSON.parse(cleanedText);
+
+                if (data.length === 0) {
+                    showTemporaryMessage('No data available for this date', 'error', 3000);
+                    return;
+                }
+
+                if (data.error) {
+                    showTemporaryMessage('Error: ' + data.error, 'error', 3000);
+                    return;
+                }
+
+                countyData = data.map(item => ({
+                    ...item,
+                    value: transformValue(variable, item.value)
+                }));
+
+                updateMapColors(variable);
+                updateLegend(variable, countyData);
+                updateColormapPreview();
+
+            } catch (error) {
+                console.error('ERROR:', error);
+                showTemporaryMessage('Failed to load data: ' + error.message, 'error', 4000);
+            } finally {
+                if (!document.getElementById('loading').classList.contains('error-state')) {
+                    showLoading(false);
+                }
+            }
+        }
+
+        function updateMapColors(variable) {
+            const valueMap = {};
+            countyData.forEach(item => {
+                if (item.value !== null && !isNaN(item.value)) {
+                    valueMap[item.fips] = item.value;
+                }
+            });
+
+            const values = countyData
+                .map(d => d.value)
+                .filter(v => v != null && !isNaN(v))
+                .sort((a, b) => a - b);
+
+            if (values.length === 0) {
+                alert('No valid data values found');
+                return;
+            }
+
+            let p5, p95;
+            const rangeMinInput = document.getElementById('range-min');
+            const rangeMaxInput = document.getElementById('range-max');
+
+            if (useDefaultRange) {
+                p5 = values[Math.floor(values.length * 0.05)];
+                p95 = values[Math.floor(values.length * 0.95)];
+                rangeMinInput.value = p5.toFixed(2);
+                rangeMaxInput.value = p95.toFixed(2);
+            } else {
+                p5 = customMin;
+                p95 = customMax;
+            }
+
+            console.log('Value range:', p5, 'to', p95);
+            console.log('Valid counties:', values.length, '/', countyData.length);
+
+            geojsonData.features.forEach(feature => {
+                if (feature.properties.fips in valueMap) {
+                    feature.properties.value = valueMap[feature.properties.fips];
+                } else {
+                    feature.properties.value = null;
+                }
+            });
+
+            window.currentP5 = p5;
+            window.currentP95 = p95;
+
+            if (countyLayer) {
+                map.removeLayer(countyLayer);
+            }
+
+            countyLayer = L.geoJSON(geojsonData, {
+                style: feature => {
+                    const value = feature.properties.value;
+                    if (!countyData) return { fillColor: '#ccc', weight: 1, opacity: 1, color: 'white', fillOpacity: 0.7 };
+
+                    return {
+                        fillColor: getColor(value, p5, p95),
+                        weight: 1,
+                        opacity: 1,
+                        color: 'white',
+                        fillOpacity: 0.7
+                    };
+                },
+                onEachFeature: onEachFeature
+            }).addTo(map);
+
+            if (selectedFips) {
+                highlightCounty(selectedFips);
+            }
+        }
+
+        function updateLegend(variable, data) {
+            let displayName = VARIABLE_DISPLAY_NAMES[variable] || variable;
+            if (anomalyMode && isInSeasonVariable(variable)) {
+                displayName += ' (Percentile)';
+            }
+
+            const values = data
+                .map(d => d.value)
+                .filter(v => v != null && !isNaN(v))
+                .sort((a, b) => a - b);
+
+            if (values.length === 0) {
+                console.log('No valid values for legend');
+                return;
+            }
+
+            const p5 = window.currentP5 || values[Math.floor(values.length * 0.05)];
+            const p95 = window.currentP95 || values[Math.floor(values.length * 0.95)];
+
+            const p20 = (p95 - p5) * 0.20 + p5;
+            const p40 = (p95 - p5) * 0.40 + p5;
+            const p60 = (p95 - p5) * 0.60 + p5;
+            const p80 = (p95 - p5) * 0.80 + p5;
+
+            const colors = COLOR_SCHEMES[currentColorScheme];
+
+            if (legend) {
+                map.removeControl(legend);
+            }
+
+            legend = L.control({ position: 'bottomright' });
+
+            legend.onAdd = function (map) {
+                const div = L.DomUtil.create('div', 'legend');
+                div.innerHTML = `
+            <strong>${displayName}</strong><br>
+            <div class="legend-item">
+                <div class="legend-color" style="background: ${colors[colors.length - 1]};"></div>
+                <span>Very High: >${p80.toFixed(2)}</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: ${colors[Math.floor(colors.length * 0.75)]};"></div>
+                <span>High: ${p60.toFixed(2)}-${p80.toFixed(2)}</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: ${colors[Math.floor(colors.length * 0.5)]};"></div>
+                <span>Medium: ${p40.toFixed(2)}-${p60.toFixed(2)}</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: ${colors[Math.floor(colors.length * 0.25)]};"></div>
+                <span>Low: ${p20.toFixed(2)}-${p40.toFixed(2)}</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: ${colors[0]};"></div>
+                <span>Very Low: <${p20.toFixed(2)}</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #ccc;"></div>
+                <span>No Data</span>
+            </div>
+            <small style="display: block; margin-top: 4px;">Range: ${p5.toFixed(2)} - ${p95.toFixed(2)}</small>
+        `;
+                return div;
+            };
+
+            legend.addTo(map);
+        }
+
+        async function loadTimeSeries() {
+            if (!selectedFips) return;
+            const variable = document.getElementById('variable-select').value;
+
+            // Check if anomaly mode is on but variable is annual - turn it off
+            if (anomalyMode && !isInSeasonVariable(variable)) {
+                document.getElementById('anomaly-mode').checked = false;
+                anomalyMode = false;
+                showTemporaryMessage('Anomaly mode only works for in-season variables', 'info', 2000);
+            }
+
+            const actualVariable = getActualVariable(variable);
+            const startDate = dateToYYYYMMDD(document.getElementById('ts-start').value);
+            const endDate = dateToYYYYMMDD(document.getElementById('ts-end').value);
+
+            showLoading(true, 'Loading time series...', 'loading');
+
+            try {
+                const url = `${CONFIG.apiTimeSeries}?fips=${selectedFips}&var=${actualVariable}&start_date=${startDate}&end_date=${endDate}`;
+                const response = await fetch(url);
+
+                const text = await response.text();
+                const cleanedText = text.replace(/:\s*NaN/g, ': null');
+                const data = JSON.parse(cleanedText);
+
+                if (data.error) {
+                    showTemporaryMessage('Error: ' + data.error, 'error', 3000);
+                    return;
+                }
+
+                const transformedData = data.map(item => ({
+                    ...item,
+                    value: transformValue(variable, item.value)
+                }));
+
+                const validData = transformedData.filter(d => d.value !== null);
+
+                if (validData.length === 0) {
+                    showTemporaryMessage('No valid data for this county and time range', 'error', 3000);
+                    return;
+                }
+
+                currentPlotData = validData;
+                currentPlotVariable = variable;
+
+                if (plotMode === 'chronological') {
+                    plotChronological(validData, variable);
+                } else {
+                    plotSeasonal(validData, variable);
+                }
+
+            } catch (error) {
+                console.error('Time series error:', error);
+                showTemporaryMessage('Failed to load time series: ' + error.message, 'error', 4000);
+            } finally {
+                if (!document.getElementById('loading').classList.contains('error-state')) {
+                    showLoading(false);
+                }
+            }
+        }
+
+        function plotChronological(data, variable) {
+            let displayName = VARIABLE_DISPLAY_NAMES[variable] || variable;
+            if (anomalyMode && isInSeasonVariable(variable)) {
+                displayName += ' (Percentile)';
+            }
+            const locationLabel = selectedCountyName && selectedStateName
+                ? `${selectedCountyName}, ${selectedStateName}`
+                : `FIPS: ${selectedFips}`;
+
+            const trace = {
+                x: data.map(d => d.date),
+                y: data.map(d => d.value),
+                mode: 'lines+markers',
+                name: displayName,
+                line: { color: '#1a5847', width: 2 },
+                marker: { size: 4, color: '#1a5847' }
+            };
+
+            const layout = {
+                title: {
+                    text: `${displayName} - Chronological View (${locationLabel})`,
+                    font: { color: '#1a5847' }
+                },
+                xaxis: { title: 'Date' },
+                yaxis: { title: anomalyMode ? 'Percentile' : displayName },
+                hovermode: 'closest',
+                margin: { t: 60, b: 60, l: 70, r: 80 }
+            };
+
+            hidePlotPlaceholder();
+            Plotly.newPlot('timeseries-container', [trace], layout, { responsive: true });
+        }
+
+        function plotSeasonal(data, variable) {
+            let displayName = VARIABLE_DISPLAY_NAMES[variable] || variable;
+            if (anomalyMode && isInSeasonVariable(variable)) {
+                displayName += ' (Percentile)';
+            }
+            const locationLabel = selectedCountyName && selectedStateName
+                ? `${selectedCountyName}, ${selectedStateName}`
+                : `FIPS: ${selectedFips}`;
+
+            const yearGroups = {};
+
+            data.forEach(d => {
+                const dateStr = d.date;
+
+                const parts = dateStr.split('-');
+                const year = parts[0];
+                const month = parts[1];
+                const day = parts[2];
+
+                if (!yearGroups[year]) {
+                    yearGroups[year] = [];
+                }
+
+                const normalizedDate = new Date(2000, parseInt(month) - 1, parseInt(day));
+
+                yearGroups[year].push({
+                    date: normalizedDate,
+                    value: d.value,
+                    originalDate: dateStr
+                });
+            });
+
+            const years = Object.keys(yearGroups).sort();
+
+            const colors = [
+                '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
+                '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf',
+                '#aec7e8', '#ffbb78', '#98df8a', '#ff9896', '#c5b0d5'
+            ];
+
+            const traces = years.map((year, idx) => {
+                const yearData = yearGroups[year].sort((a, b) => a.date - b.date);
+
+                return {
+                    x: yearData.map(d => d.date),
+                    y: yearData.map(d => d.value),
+                    mode: 'lines+markers',
+                    name: year,
+                    line: { color: colors[idx % colors.length], width: 2 },
+                    marker: { size: 4 },
+                    text: yearData.map(d => d.originalDate),
+                    hovertemplate: '%{text}<br>%{y:.3f}<extra></extra>'
+                };
+            });
+
+            const layout = {
+                title: {
+                    text: `${displayName} - Seasonal Comparison (${locationLabel})`,
+                    font: { color: '#1a5847' }
+                },
+                xaxis: {
+                    title: 'Date in the Year',
+                    tickformat: '%b',
+                    dtick: 'M1',
+                    range: [new Date(2000, 0, 1), new Date(2000, 11, 31)]
+                },
+                yaxis: { title: anomalyMode ? 'Percentile' : displayName },
+                hovermode: 'closest',
+                margin: { t: 60, b: 60, l: 70, r: 180 },
+                showlegend: true,
+                legend: {
+                    x: 1.02,
+                    y: 1
+                }
+            };
+
+            hidePlotPlaceholder();
+            Plotly.newPlot('timeseries-container', traces, layout, { responsive: true });
+        }
+
+        function togglePlotMode() {
+            if (!currentPlotData) return;
+
+            const button = document.getElementById('plot-toggle');
+
+            if (plotMode === 'chronological') {
+                plotMode = 'seasonal';
+                button.textContent = 'Chronological View';
+                button.classList.add('active');
+                plotSeasonal(currentPlotData, currentPlotVariable);
+            } else {
+                plotMode = 'chronological';
+                button.textContent = 'Seasonal Comparison';
+                button.classList.remove('active');
+                plotChronological(currentPlotData, currentPlotVariable);
+            }
+        }
+
+        function showLoading(show, message = 'Loading data...', type = 'loading') {
+            const loadingDiv = document.getElementById('loading');
+
+            if (show) {
+                loadingDiv.textContent = message;
+                loadingDiv.className = '';
+                loadingDiv.classList.add(`${type}-state`);
+                loadingDiv.style.display = 'block';
+            } else {
+                loadingDiv.style.display = 'none';
+            }
+        }
+
+        function showTemporaryMessage(message, type = 'error', duration = 3000) {
+            showLoading(true, message, type);
+            setTimeout(() => {
+                showLoading(false);
+            }, duration);
+        }
+
+        // Event listeners
+        document.getElementById('update-map').addEventListener('click', updateMap);
+        document.getElementById('update-plot').addEventListener('click', loadTimeSeries);
+        document.getElementById('plot-toggle').addEventListener('click', togglePlotMode);
+        document.getElementById('select-county-btn').addEventListener('click', toggleSelectionMode);
+        document.getElementById('collapse-btn').addEventListener('click', togglePanelCollapse);
+        document.getElementById('clear-btn').addEventListener('click', clearSelection);
+
+        // Color scheme only updates preview, NOT the map
+        document.getElementById('colormap-select').addEventListener('change', (e) => {
+            currentColorScheme = e.target.value;
+            updateColormapPreview();
+        });
+
+        // Header click to expand when collapsed
+        document.getElementById('county-info-header').addEventListener('click', (e) => {
+            if (panelCollapsed && !e.target.closest('.header-buttons')) {
+                togglePanelCollapse();
+            }
+        });
+
+        // Next date button functionality
+        const nextDateBtn = document.getElementById('next-date-btn');
+        let mouseDownTimer = null;
+
+        nextDateBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (!isPlaying) {
+                advanceToNextDate();
+            } else {
+                stopPlaying();
+            }
+        });
+
+        nextDateBtn.addEventListener('mousedown', () => {
+            mouseDownTimer = setTimeout(() => {
+                startPlaying();
+            }, 500);
+        });
+
+        nextDateBtn.addEventListener('mouseup', () => {
+            if (mouseDownTimer) {
+                clearTimeout(mouseDownTimer);
+                mouseDownTimer = null;
+            }
+        });
+
+        nextDateBtn.addEventListener('mouseleave', () => {
+            if (mouseDownTimer) {
+                clearTimeout(mouseDownTimer);
+                mouseDownTimer = null;
+            }
+        });
+
+        // Search input event listeners
+        const searchInput = document.getElementById('county-search');
+        const searchResults = document.getElementById('search-results');
+
+        searchInput.addEventListener('focus', () => {
+            const term = searchInput.value;
+            filteredCounties = filterCounties(term);
+            renderSearchResults(filteredCounties);
+        });
+
+        searchInput.addEventListener('input', (e) => {
+            const term = e.target.value;
+            filteredCounties = filterCounties(term);
+            searchSelectedIndex = -1;
+            renderSearchResults(filteredCounties);
+        });
+
+        searchInput.addEventListener('keydown', (e) => {
+            if (!searchResults.classList.contains('show')) return;
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                searchSelectedIndex = Math.min(searchSelectedIndex + 1, filteredCounties.length - 1);
+                renderSearchResults(filteredCounties);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                searchSelectedIndex = Math.max(searchSelectedIndex - 1, 0);
+                renderSearchResults(filteredCounties);
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (searchSelectedIndex >= 0 && searchSelectedIndex < filteredCounties.length) {
+                    selectCountyFromSearch(filteredCounties[searchSelectedIndex]);
+                }
+            } else if (e.key === 'Escape') {
+                searchResults.classList.remove('show');
+                searchSelectedIndex = -1;
+            }
+        });
+
+        // Click outside to close search results
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.search-container')) {
+                searchResults.classList.remove('show');
+                searchSelectedIndex = -1;
+            }
+        });
+
+        // Right-click to exit selection mode
+        document.addEventListener('contextmenu', (e) => {
+            if (selectionMode) {
+                e.preventDefault();
+                toggleSelectionMode();
+            }
+        });
+
+        // Custom Dropdown Implementation
+        class CustomDropdown {
+            constructor(selectElement) {
+                this.select = selectElement;
+                this.selected = this.select.value;
+                this.isOpen = false;
+
+                this.createCustomDropdown();
+                this.attachEvents();
+            }
+
+            createCustomDropdown() {
+                this.wrapper = document.createElement('div');
+                this.wrapper.className = 'custom-dropdown';
+
+                this.button = document.createElement('button');
+                this.button.className = 'custom-dropdown-button';
+                this.button.type = 'button';
+                this.updateButtonText();
+
+                this.panel = document.createElement('div');
+                this.panel.className = 'custom-dropdown-panel';
+
+                this.populateOptions();
+
+                this.select.style.display = 'none';
+                this.select.parentNode.insertBefore(this.wrapper, this.select);
+                this.wrapper.appendChild(this.button);
+                this.wrapper.appendChild(this.panel);
+            }
+
+            populateOptions() {
+                const groups = {};
+
+                Array.from(this.select.children).forEach(child => {
+                    if (child.tagName === 'OPTGROUP') {
+                        const label = child.label;
+                        groups[label] = Array.from(child.children);
+                    } else if (child.tagName === 'OPTION') {
+                        if (!groups['']) groups[''] = [];
+                        groups[''].push(child);
+                    }
+                });
+
+                let html = '';
+                Object.keys(groups).forEach(groupLabel => {
+                    if (groupLabel) {
+                        html += `<div class="custom-dropdown-group-label">${groupLabel}</div>`;
+                    }
+                    groups[groupLabel].forEach(option => {
+                        const isSelected = option.value === this.selected;
+                        html += `
+                    <div class="custom-dropdown-item ${isSelected ? 'selected' : ''}" data-value="${option.value}">
+                        ${isSelected ? '<span class="check">✓</span>' : '<span class="check"></span>'}
+                        ${option.text}
+                    </div>
+                `;
+                    });
+                });
+
+                this.panel.innerHTML = html;
+            }
+
+            updateButtonText() {
+                const selectedOption = this.select.querySelector(`option[value="${this.selected}"]`);
+                this.button.textContent = selectedOption ? selectedOption.text : 'Select...';
+            }
+
+            syncFromSelect() {
+                // Update the custom dropdown when underlying select changes
+                this.selected = this.select.value;
+                this.updateButtonText();
+                this.populateOptions();
+            }
+
+            attachEvents() {
+                this.button.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.toggle();
+                });
+
+                this.panel.addEventListener('click', (e) => {
+                    const item = e.target.closest('.custom-dropdown-item');
+                    if (item) {
+                        this.selectValue(item.dataset.value);
+                    }
+                });
+
+                document.addEventListener('click', (e) => {
+                    if (!this.wrapper.contains(e.target)) {
+                        this.close();
+                    }
+                });
+            }
+
+            toggle() {
+                this.isOpen ? this.close() : this.open();
+            }
+
+            open() {
+                this.isOpen = true;
+                this.wrapper.classList.add('open');
+            }
+
+            close() {
+                this.isOpen = false;
+                this.wrapper.classList.remove('open');
+            }
+
+            selectValue(value) {
+                this.selected = value;
+                this.select.value = value;
+                this.updateButtonText();
+                this.populateOptions();
+                this.close();
+
+                this.select.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        }
+
+        // Initialize everything on DOM load
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize custom dropdowns and store references
+            const selects = document.querySelectorAll('#variable-select, #date-select, #colormap-select');
+            selects.forEach(select => {
+                customDropdowns[select.id] = new CustomDropdown(select);
+            });
+
+            // Initialize range controls
+            const useDefaultCheckbox = document.getElementById('use-default-range');
+            const rangeMinInput = document.getElementById('range-min');
+            const rangeMaxInput = document.getElementById('range-max');
+
+            if (useDefaultCheckbox && rangeMinInput && rangeMaxInput) {
+                useDefaultCheckbox.addEventListener('change', (e) => {
+                    useDefaultRange = e.target.checked;
+
+                    if (useDefaultRange) {
+                        rangeMinInput.disabled = true;
+                        rangeMaxInput.disabled = true;
+                        rangeMinInput.style.background = '#e8ede9';
+                        rangeMaxInput.style.background = '#e8ede9';
+                    } else {
+                        rangeMinInput.disabled = false;
+                        rangeMaxInput.disabled = false;
+                        rangeMinInput.style.background = '#f8fdfb';
+                        rangeMaxInput.style.background = '#f8fdfb';
+                    }
+                });
+            }
+
+            // Anomaly mode toggle
+            const anomalyCheckbox = document.getElementById('anomaly-mode');
+            if (anomalyCheckbox) {
+                anomalyCheckbox.addEventListener('change', (e) => {
+                    anomalyMode = e.target.checked;
+                });
+            }
+        });
+
+    </script>
+</body>
+
+</html>
