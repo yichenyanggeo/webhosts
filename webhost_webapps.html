@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Tools - Yichen Yang</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: #ffffff;
+            color: #2c3e37;
+            overflow-x: hidden;
+        }
+
+        #topo-bg {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 80px 80px;
+        }
+
+        /* ── Page title ── */
+        .page-title {
+            font-size: 64px;
+            font-weight: 700;
+            color: #1f4d34;
+            letter-spacing: -2.5px;
+            line-height: 1.05;
+            margin-bottom: 80px;
+            position: relative;
+            padding-bottom: 20px;
+        }
+
+        .page-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0;
+            width: 80px; height: 3px;
+            background: linear-gradient(90deg, #2d5f3f, #4a7c59);
+        }
+
+        /* ── App block ── */
+        .app-block {
+            margin-bottom: 80px;
+        }
+
+        .app-year {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #2d5f3f;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            margin-bottom: 14px;
+            display: block;
+        }
+
+        .app-block h2 {
+            font-size: 36px;
+            font-weight: 700;
+            color: #1f4d34;
+            letter-spacing: -1.2px;
+            margin-bottom: 10px;
+            position: relative;
+            padding-bottom: 16px;
+        }
+
+        .app-block h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0;
+            width: 80px; height: 3px;
+            background: linear-gradient(90deg, #2d5f3f, #4a7c59);
+        }
+
+        .app-affiliation {
+            font-size: 13px;
+            color: #7ea66d;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 36px;
+        }
+
+        .app-body p {
+            font-size: 18px;
+            line-height: 1.85;
+            color: #3a4a42;
+            margin-bottom: 22px;
+            max-width: 900px;
+        }
+
+        .app-body p:last-of-type {
+            margin-bottom: 0;
+        }
+
+        /* ── Dashboards ── */
+        .dashboards {
+            margin-top: 48px;
+            display: flex;
+            flex-direction: column;
+            gap: 56px;
+        }
+
+        .dashboard-block {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .dashboard-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px;
+            background: #1f4d34;
+            border-radius: 6px 6px 0 0;
+        }
+
+        .dashboard-header span {
+            font-size: 13px;
+            font-weight: 700;
+            color: #a8d8b0;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .fullscreen-btn {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            color: #ffffff;
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.25);
+            padding: 6px 14px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-decoration: none;
+        }
+
+        .fullscreen-btn:hover {
+            background: rgba(255,255,255,0.22);
+        }
+
+        .dashboard-frame {
+            width: 100%;
+            height: 85vh;
+            border: none;
+            border-radius: 0 0 6px 6px;
+            display: block;
+            box-shadow: 0 4px 24px rgba(45,95,63,0.12);
+        }
+
+        /* ── Why toggle (top-level, inverted) ── */
+        .why-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 0;
+            padding: 20px 28px;
+            background: #1f4d34;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 17px;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: 0.8px;
+            transition: background 0.2s;
+            text-align: left;
+        }
+
+        .why-toggle:hover {
+            background: #2d5f3f;
+        }
+
+        .why-toggle[aria-expanded="true"] {
+            border-radius: 4px 4px 0 0;
+        }
+
+        .why-arrow {
+            width: 0;
+            height: 0;
+            border-left: 7px solid transparent;
+            border-right: 7px solid transparent;
+            border-top: 9px solid #a8d8b0;
+            flex-shrink: 0;
+            transition: transform 0.3s;
+        }
+
+        .why-toggle[aria-expanded="false"] .why-arrow {
+            transform: rotate(-90deg);
+        }
+
+        .why-body {
+            padding: 32px 28px 36px;
+            background: #f0f7f2;
+            border: 1px solid rgba(45,95,63,0.2);
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            margin-bottom: 40px;
+        }
+
+        .why-body p {
+            font-size: 17px;
+            line-height: 1.85;
+            color: #3a4a42;
+            margin-bottom: 18px;
+        }
+
+        .why-body p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* ── Dashboard section (indented child group) ── */
+        .dashboard-section {
+            padding-left: 36px;
+            border-left: 2px solid rgba(45, 95, 63, 0.15);
+            margin-top: 32px;
+        }
+
+        /* ── Sub-banners below each dashboard ── */
+        .sub-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 0;
+            padding: 14px 20px;
+            background: #f5f9f6;
+            border: 1px solid rgba(45,95,63,0.2);
+            border-left: 3px solid #2d5f3f;
+            border-radius: 3px;
+            cursor: pointer;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            color: #1f4d34;
+            letter-spacing: 0.5px;
+            transition: background 0.2s;
+            text-align: left;
+            margin-top: 12px;
+        }
+
+        .sub-toggle:hover {
+            background: rgba(45,95,63,0.08);
+        }
+
+        .sub-toggle[aria-expanded="true"] {
+            border-radius: 3px 3px 0 0;
+            border-bottom-color: transparent;
+        }
+
+        .sub-arrow {
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 7px solid #2d5f3f;
+            flex-shrink: 0;
+            transition: transform 0.3s;
+        }
+
+        .sub-toggle[aria-expanded="false"] .sub-arrow {
+            transform: rotate(-90deg);
+        }
+
+        .sub-body {
+            padding: 20px 20px 24px;
+            background: #f5f9f6;
+            border: 1px solid rgba(45,95,63,0.2);
+            border-left: 3px solid #2d5f3f;
+            border-top: none;
+            border-radius: 0 0 3px 3px;
+        }
+
+        .sub-body p {
+            font-size: 15px;
+            line-height: 1.8;
+            color: #3a4a42;
+            margin-bottom: 12px;
+        }
+
+        .sub-body p:last-child { margin-bottom: 0; }
+
+        /* ── Back button ── */
+        .back-home {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 56px;
+            text-decoration: none;
+            color: #1f4d34;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            padding: 10px 0;
+            border-bottom: 2px solid transparent;
+            transition: border-color 0.2s, color 0.2s;
+        }
+
+        .back-home:hover {
+            color: #2d5f3f;
+            border-bottom-color: #2d5f3f;
+        }
+
+        .back-home-arrow {
+            width: 0;
+            height: 0;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+            border-right: 7px solid #1f4d34;
+            transition: border-right-color 0.2s;
+        }
+
+        .back-home:hover .back-home-arrow {
+            border-right-color: #2d5f3f;
+        }
+
+        /* ── Footer ── */
+        footer {
+            border-top: 1px solid rgba(45,95,63,0.12);
+            padding-top: 40px;
+            margin-top: 40px;
+        }
+
+        footer p {
+            font-size: 13px;
+            color: #9ab09e;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="topo-bg"></canvas>
+
+    <div class="container">
+
+        <a class="back-home" href="index.html">
+            <span class="back-home-arrow"></span>
+            Back to Home
+        </a>
+
+        <h1 class="page-title" style="white-space: nowrap;">Tools I Built for the Public</h1>
+
+        <div class="app-block">
+            <span class="app-year">MAY 2025 – PRESENT</span>
+            <h2>US Corn Belt Monitoring &amp; Yield Forecasting</h2>
+            <p class="app-affiliation">PhD Side Project &nbsp;·&nbsp; Yale University</p>
+
+            <button class="why-toggle" onclick="toggleWhy(this)" aria-expanded="false">
+                <span class="why-label">Why am I doing this?</span>
+                <span class="why-arrow"></span>
+            </button>
+
+            <div class="why-body" hidden>
+                <p>Corn yield forecasts move markets. Every year, substantial sums in commodity trades are made or lost in the weeks before USDA releases its official monthly estimates, and for most of that window, the public is flying blind. Large institutional players manage this uncertainty with proprietary forecast models built on satellite data, weather analytics, and their own internal data pipelines. Farmers, regional co-ops, and smaller traders have more limited access to this kind of intelligence, leaving them more passive in the market and often having to comply with price signals set by larger players.</p>
+
+                <p>This project is an attempt to close that gap. I collect data from open satellite archives, weather reanalysis, and USDA crop progress reports, and apply state-of-the-art published methods to generate county-level corn yield forecasts for the 12 top-producing states in the US Corn Belt, updated throughout the growing season and freely accessible to anyone. I also publish my own national-level corn yield forecast, serving as an independent second signal alongside the official USDA estimates. The goal is twofold: to provide a genuine public good by democratizing early-season yield intelligence, and to benchmark published forecasting methods against each other in a real, operational setting rather than the controlled conditions of academic papers.</p>
+
+                <p>Alongside the forecasts, I built a monitoring dashboard that aggregates the full picture at county level: historical and current vegetation indices, weather anomalies, and drought indices — all the leading indicators that impact final yield. It is designed to be a no-friction first stop for anyone who wants a quick read on what is happening in the Corn Belt right now, without the overhead of pulling and processing the underlying data themselves.</p>
+            </div>
+
+            <div class="dashboards dashboard-section">
+                <div class="dashboard-block">
+                    <div class="dashboard-header">
+                        <span>US Corn Belt Monitoring &amp; Yield Forecasting</span>
+                        <a class="fullscreen-btn" href="./webhost_dashboard_county_level.html?v=2" target="_blank">↗ Full Screen</a>
+                    </div>
+                    <iframe class="dashboard-frame" src="./webhost_dashboard_county_level.html?v=2" loading="lazy" allowfullscreen></iframe>
+                </div>
+
+                <button class="sub-toggle" onclick="toggleSub(this)" aria-expanded="false">
+                    <span>Data Sources</span>
+                    <span class="sub-arrow"></span>
+                </button>
+                <div class="sub-body" hidden>
+                    <p>Coming soon.</p>
+                </div>
+
+                <button class="sub-toggle" onclick="toggleSub(this)" aria-expanded="false">
+                    <span>How to Read This Dashboard</span>
+                    <span class="sub-arrow"></span>
+                </button>
+                <div class="sub-body" hidden>
+                    <p>Coming soon.</p>
+                </div>
+
+                <div class="dashboard-block">
+                    <div class="dashboard-header">
+                        <span>US National Corn Yield Forecasting</span>
+                        <a class="fullscreen-btn" href="./webhost_dashboard_national.html?v=2" target="_blank">↗ Full Screen</a>
+                    </div>
+                    <iframe class="dashboard-frame" src="./webhost_dashboard_national.html?v=2" loading="lazy" allowfullscreen></iframe>
+                </div>
+
+                <button class="sub-toggle" onclick="toggleSub(this)" aria-expanded="false">
+                    <span>Data Sources</span>
+                    <span class="sub-arrow"></span>
+                </button>
+                <div class="sub-body" hidden>
+                    <p>Coming soon.</p>
+                </div>
+
+                <button class="sub-toggle" onclick="toggleSub(this)" aria-expanded="false">
+                    <span>How to Read This Dashboard</span>
+                    <span class="sub-arrow"></span>
+                </button>
+                <div class="sub-body" hidden>
+                    <p>Coming soon.</p>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>© 2026 Yichen Yang · Yale School of the Environment</p>
+        </footer>
+
+    </div>
+
+    <script>
+        (function () {
+            const canvas = document.getElementById('topo-bg');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            function hash(x, y) {
+                let n = x * 374761393 + y * 668265263;
+                n = Math.imul(n ^ (n >>> 13), 1274126177);
+                return ((n ^ (n >>> 16)) >>> 0) / 0xffffffff;
+            }
+            function smoothNoise(x, y) {
+                const ix = Math.floor(x), iy = Math.floor(y);
+                const fx = x - ix, fy = y - iy;
+                const ux = fx * fx * (3 - 2 * fx), uy = fy * fy * (3 - 2 * fy);
+                const a = hash(ix, iy), b = hash(ix + 1, iy);
+                const c = hash(ix, iy + 1), d = hash(ix + 1, iy + 1);
+                return a + (b - a) * ux + (c - a) * uy + (a - b - c + d) * ux * uy;
+            }
+            function fractalNoise(x, y) {
+                let v = 0, amp = 1, freq = 1, total = 0;
+                for (let i = 0; i < 6; i++) {
+                    v += smoothNoise(x * freq, y * freq) * amp;
+                    total += amp; amp *= 0.52; freq *= 2.1;
+                }
+                return v / total;
+            }
+            const GRID = 2;
+            const cols = Math.ceil(canvas.width / GRID) + 2;
+            const rows = Math.ceil(canvas.height / GRID) + 2;
+            const SCALE = 0.018;
+            const field = Array.from({ length: rows }, (_, r) =>
+                Array.from({ length: cols }, (_, c) => fractalNoise(c * SCALE, r * SCALE))
+            );
+            function interp(a, b, level) {
+                if (Math.abs(b - a) < 1e-10) return 0.5;
+                return Math.max(0, Math.min(1, (level - a) / (b - a)));
+            }
+            function getSegments(tl, tr, br, bl, level, x0, y0) {
+                const idx = (tl > level ? 8 : 0) | (tr > level ? 4 : 0) | (br > level ? 2 : 0) | (bl > level ? 1 : 0);
+                if (idx === 0 || idx === 15) return [];
+                const top    = { x: x0 + interp(tl, tr, level) * GRID, y: y0 };
+                const right  = { x: x0 + GRID, y: y0 + interp(tr, br, level) * GRID };
+                const bottom = { x: x0 + interp(bl, br, level) * GRID, y: y0 + GRID };
+                const left   = { x: x0, y: y0 + interp(tl, bl, level) * GRID };
+                const T = top, R = right, B = bottom, L = left;
+                const cases = { 1:[[L,B]],2:[[B,R]],3:[[L,R]],4:[[T,R]],5:[[T,L],[B,R]],6:[[T,B]],7:[[T,L]],8:[[T,L]],9:[[T,B]],10:[[T,R],[L,B]],11:[[T,R]],12:[[L,R]],13:[[B,R]],14:[[L,B]] };
+                return cases[idx] || [];
+            }
+            const levels = [];
+            for (let l = 0.08; l < 0.95; l += 0.02) levels.push(l);
+            levels.forEach((level, li) => {
+                const isMajor = li % 5 === 0;
+                ctx.strokeStyle = '#2d5f3f';
+                ctx.globalAlpha = isMajor ? 0.14 : 0.07;
+                ctx.lineWidth   = isMajor ? 1.4  : 0.7;
+                ctx.beginPath();
+                for (let r = 0; r < rows - 1; r++) {
+                    for (let c = 0; c < cols - 1; c++) {
+                        const segs = getSegments(field[r][c], field[r][c+1], field[r+1][c+1], field[r+1][c], level, c*GRID, r*GRID);
+                        segs.forEach(([p1,p2]) => { ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); });
+                    }
+                }
+                ctx.stroke();
+            });
+            ctx.globalAlpha = 1;
+        })();
+        function toggleWhy(btn) {
+            const body = btn.nextElementSibling;
+            const expanded = btn.getAttribute('aria-expanded') === 'true';
+            btn.setAttribute('aria-expanded', !expanded);
+            body.hidden = expanded;
+        }
+
+        function toggleSub(btn) {
+            const body = btn.nextElementSibling;
+            const expanded = btn.getAttribute('aria-expanded') === 'true';
+            btn.setAttribute('aria-expanded', !expanded);
+            body.hidden = expanded;
+        }
+    </script>
+</body>
+</html>
