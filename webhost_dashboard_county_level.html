@@ -1130,8 +1130,10 @@
         const CONFIG = {
             // geojsonUrl: `https://storage.googleapis.com/yyprocessing/CROP_YIELD_ONLINE/cornbelt_counties.geojson?t=${Date.now()}`,  // GCS (deprecated)
             geojsonUrl: `https://data.yichenyang.dev/Dashboards/county_level/cornbelt_counties.geojson?t=${Date.now()}`,
-            apiMapData: 'https://us-central1-yyresearch.cloudfunctions.net/get-map-data',
-            apiTimeSeries: 'https://us-central1-yyresearch.cloudfunctions.net/get-county-timeseries'
+            // apiMapData: 'https://us-central1-yyresearch.cloudfunctions.net/get-map-data',  // GCF (deprecated)
+            // apiTimeSeries: 'https://us-central1-yyresearch.cloudfunctions.net/get-county-timeseries',  // GCF (deprecated)
+            apiMapData: 'https://lvr4emwuocu5nx7ksohe3hwwwq0jjute.lambda-url.us-east-2.on.aws',
+            apiTimeSeries: 'https://5scuduu4gulimo7nnnnlz4e7li0bkywg.lambda-url.us-east-2.on.aws'
         };
 
         const VARIABLE_DISPLAY_NAMES = {
