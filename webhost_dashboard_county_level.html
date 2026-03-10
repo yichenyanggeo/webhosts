@@ -134,7 +134,7 @@
 
         /* ── Bottom plot row ── */
         #bottom-container {
-            height: min(400px, 30vh);
+            height: min(400px, 40vh);
             flex-shrink: 0;
             display: flex;
             flex-direction: column;
@@ -1255,6 +1255,7 @@
         let customMin = null;
         let customMax = null;
         let customDropdowns = {};
+        let isDragging = false;
 
         function isInSeasonVariable(variable) {
             const annualVariables = [
@@ -1531,6 +1532,21 @@
         // Initialize Leaflet map
         const map = L.map('map').setView([41.5, -93.5], 5);
 
+        map.on('dragstart', () => {
+            isDragging = true;
+            sharedTooltip.remove();   // kill the one that was open
+            if (countyLayer) {
+                countyLayer.eachLayer(layer => {
+                    if (layer !== highlightedLayer) countyLayer.resetStyle(layer);
+                });
+            }
+        });
+
+
+        map.on('dragend', () => {
+            isDragging = false;
+        });
+
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors',
             maxZoom: 18
@@ -1561,11 +1577,13 @@
         }
 
         function highlightFeature(e) {
+            if (isDragging) return;
             const layer = e.target;
             if (layer !== highlightedLayer) {
                 layer.setStyle({ weight: 3, color: '#666', fillOpacity: 0.9 });
                 layer.bringToFront();
             }
+            if (highlightedLayer) highlightedLayer.bringToFront(); 
         }
 
         function resetHighlight(e) {
@@ -1579,12 +1597,23 @@
             loadTimeSeries();
         }
 
+        // One shared tooltip instance — physically impossible to have multiples
+        const sharedTooltip = L.tooltip({ className: 'county-tooltip', direction: 'top' });
+
         function onEachFeature(feature, layer) {
-            layer.bindTooltip(
-                `${feature.properties.NAMELSAD}, ${feature.properties.STATE_NAME}`,
-                { permanent: false, direction: 'top', className: 'county-tooltip' }
-            );
-            layer.on({ mouseover: highlightFeature, mouseout: resetHighlight, click: onCountyClick });
+            const label = `${feature.properties.NAMELSAD}, ${feature.properties.STATE_NAME}`;
+            layer.on({
+                mouseover: (e) => {
+                    if (isDragging) return;
+                    sharedTooltip.setContent(label).setLatLng(e.latlng).addTo(map);
+                    highlightFeature(e);
+                },
+                mouseout: (e) => {
+                    sharedTooltip.remove();
+                    resetHighlight(e);
+                },
+                click: onCountyClick
+            });
         }
 
         fetch(CONFIG.geojsonUrl)
