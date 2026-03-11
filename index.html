@@ -27,6 +27,8 @@
         nav a::after { content: ''; position: absolute; bottom: 0; left: 0; width: 0; height: 2px; background: #2d5f3f; transition: width 0.3s; }
         nav a:hover { color: #2d5f3f; }
         nav a:hover::after { width: 100%; }
+        nav a.active { color: #2d5f3f; }
+        nav a.active::after { width: 100%; }
         h2 { font-size: 42px; font-weight: 700; margin-bottom: 45px; color: #1f4d34; letter-spacing: -1.5px; position: relative; padding-bottom: 16px; }
         h2::after { content: ''; position: absolute; bottom: 0; left: 0; width: 80px; height: 3px; background: linear-gradient(90deg, #2d5f3f, #4a7c59); }
         .about { margin-bottom: 100px; }
@@ -224,6 +226,14 @@
             levels.forEach((level,li)=>{const isMajor=li%5===0;ctx.strokeStyle='#2d5f3f';ctx.globalAlpha=isMajor?0.14:0.07;ctx.lineWidth=isMajor?1.4:0.7;ctx.beginPath();for(let r=0;r<rows-1;r++){for(let c=0;c<cols-1;c++){const segs=getSegments(field[r][c],field[r][c+1],field[r+1][c+1],field[r+1][c],level,c*GRID,r*GRID);segs.forEach(([p1,p2])=>{ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);});}}ctx.stroke();});
             ctx.globalAlpha=1;
         })();
+    </script>
+    <script>
+        const aboutLink = document.querySelector('nav a[href="#about"]');
+        const aboutSection = document.getElementById('about');
+        const observer = new IntersectionObserver(entries => {
+            aboutLink.classList.toggle('active', entries[0].isIntersecting);
+        }, { threshold: 0.1 });
+        observer.observe(aboutSection);
     </script>
 </body>
 </html>

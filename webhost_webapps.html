@@ -331,6 +331,14 @@
             border-right-color: #2d5f3f;
         }
 
+        nav { margin: 30px 0; padding: 25px 0; border-top: 1px solid #d4e5d0; border-bottom: 1px solid #d4e5d0; display: flex; gap: 60px; justify-content: left; }
+        nav a { font-size: 20px; text-decoration: none; color: #2c3e37; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 600; transition: all 0.3s; position: relative; padding-bottom: 4px; }
+        nav a::after { content: ''; position: absolute; bottom: 0; left: 0; width: 0; height: 2px; background: #2d5f3f; transition: width 0.3s; }
+        nav a:hover { color: #2d5f3f; }
+        nav a:hover::after { width: 100%; }
+        nav a.active { color: #2d5f3f; }
+        nav a.active::after { width: 100%; }
+
         /* ── Footer ── */
         footer {
             border-top: 1px solid rgba(45,95,63,0.12);
@@ -354,6 +362,12 @@
             <span class="back-home-arrow"></span>
             Back to Home
         </a>
+
+        <nav>
+            <a href="index.html#about">About Yichen</a>
+            <a href="webhost_researchfootprint.html">Research Footprints</a>
+            <a href="webhost_webapps.html" class="active">Web Tools</a>
+        </nav>
 
         <h1 class="page-title" style="white-space: nowrap;">Tools I Built for the Public</h1>
 

@@ -1629,7 +1629,8 @@
             if (anomalyMode && !isInSeasonVariable(variable)) {
                 document.getElementById('anomaly-mode').checked = false;
                 anomalyMode = false;
-                showTemporaryMessage('Anomaly mode only works for in-season variables', 'info', 2000);
+                showTemporaryMessage('Historical Anomaly mode is for in-season variables only. For annual variables, please try again to load regular data.', 'error', 3500);
+                return;
             }
 
             const actualVariable = getActualVariable(variable);
@@ -1751,12 +1752,18 @@
             if (anomalyMode && !isInSeasonVariable(variable)) {
                 document.getElementById('anomaly-mode').checked = false;
                 anomalyMode = false;
-                showTemporaryMessage('Anomaly mode only works for in-season variables', 'info', 2000);
+                showTemporaryMessage('Historical Anomaly mode is for in-season variables only. For annual variables, please try again to load regular data.', 'error', 3500);
+                return;
             }
 
             const actualVariable = getActualVariable(variable);
             const startDate = dateToYYYYMMDD(document.getElementById('ts-start').value);
             const endDate = dateToYYYYMMDD(document.getElementById('ts-end').value);
+
+            if (startDate >= endDate) {
+                showTemporaryMessage('Invalid date range.', 'error', 3000);
+                return;
+            }
 
             showLoading(true, 'Loading time series...', 'loading');
 
