@@ -527,8 +527,7 @@
             box-shadow: none;
         }
 
-        #select-county-btn,
-        #next-date-btn {
+        #select-county-btn {
             width: 100%;
             padding: 11px;
             background: white;
@@ -541,6 +540,28 @@
             transition: all 0.2s;
         }
 
+        .date-nav-btn {
+            flex: 1;
+            padding: 11px;
+            background: white;
+            color: #1a5847;
+            border: 2px solid #1a5847;
+            font-size: 15px;
+            font-weight: 400;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        #last-date-btn {
+            border-radius: 6px 0 0 6px;
+            border-right: 1px solid #1a5847;
+        }
+
+        #next-date-btn {
+            border-radius: 0 6px 6px 0;
+            border-left: 1px solid #1a5847;
+        }
+
         #select-county-btn {
             display: flex;
             align-items: center;
@@ -550,7 +571,7 @@
         }
 
         #select-county-btn:hover,
-        #next-date-btn:hover {
+        .date-nav-btn:hover {
             background: #f0f5f3;
             border-color: #145240;
             color: #145240;
@@ -572,15 +593,11 @@
             content: '✓';
         }
 
-        #next-date-btn.playing {
+        .date-nav-btn.playing {
             background: #f0f5f3;
             border-color: #145240;
             color: #145240;
             animation: pulse 1.5s ease-in-out infinite;
-        }
-
-        #next-date-btn.playing::before {
-            content: '⏸ ';
         }
 
         @keyframes pulse {
@@ -1101,8 +1118,9 @@
                 </div>
             </div>
 
-            <div class="control-group">
-                <button id="next-date-btn">▶ Next Date</button>
+            <div class="control-group" style="display:flex;">
+                <button id="last-date-btn" class="date-nav-btn">◀ Last Date</button>
+                <button id="next-date-btn" class="date-nav-btn">Next Date ▶</button>
             </div>
 
             <div class="control-group">
@@ -1248,6 +1266,7 @@
         let searchSelectedIndex = -1;
         let filteredCounties = [];
         let highlightedLayer = null;
+        let selectionOverlay = null;
         let selectedFips = null;
         let selectedCountyName = null;
         let selectedStateName = null;
@@ -1256,6 +1275,7 @@
         let customMax = null;
         let customDropdowns = {};
         let isDragging = false;
+        let isLoading = false;
 
         function isInSeasonVariable(variable) {
             const annualVariables = [
@@ -1272,8 +1292,8 @@
             return variable;
         }
 
-        function updateColormapPreview() {
-            const colors = COLOR_SCHEMES[currentColorScheme];
+        function updateColormapPreview(scheme) {
+            const colors = COLOR_SCHEMES[scheme || currentColorScheme];
             document.getElementById('colormap-preview').style.background =
                 `linear-gradient(to right, ${colors.join(', ')})`;
         }
@@ -1329,9 +1349,10 @@
         populateDateDropdown();
         updateColormapPreview();
 
-        // Next date / play
+        // Next date / Last date / play
         let playInterval = null;
         let isPlaying = false;
+        let playDirection = 'next';
 
         async function advanceToNextDate() {
             const select = document.getElementById('date-select');
@@ -1343,28 +1364,42 @@
             return true;
         }
 
-        async function startPlaying() {
-            if (isPlaying) return;
-            isPlaying = true;
-            const btn = document.getElementById('next-date-btn');
-            btn.classList.add('playing');
-            btn.textContent = 'Pause';
-            await playNextDate();
+        async function advanceToLastDate() {
+            const select = document.getElementById('date-select');
+            const currentIndex = select.selectedIndex;
+            if (currentIndex >= select.options.length - 1) { stopPlaying(); return false; }
+            select.selectedIndex = currentIndex + 1;
+            if (customDropdowns['date-select']) customDropdowns['date-select'].syncFromSelect();
+            await updateMap();
+            return true;
         }
 
-        async function playNextDate() {
+        async function startPlaying(direction = 'next') {
+            if (isPlaying) return;
+            isPlaying = true;
+            playDirection = direction;
+            const btn = document.getElementById(direction === 'next' ? 'next-date-btn' : 'last-date-btn');
+            btn.classList.add('playing');
+            btn.textContent = 'Pause';
+            await playStep();
+        }
+
+        async function playStep() {
             if (!isPlaying) return;
-            const canContinue = await advanceToNextDate();
+            const canContinue = playDirection === 'next' ? await advanceToNextDate() : await advanceToLastDate();
             if (!canContinue) { stopPlaying(); return; }
-            setTimeout(() => { if (isPlaying) playNextDate(); }, 500);
+            setTimeout(() => { if (isPlaying) playStep(); }, 500);
         }
 
         function stopPlaying() {
             if (!isPlaying) return;
             isPlaying = false;
-            const btn = document.getElementById('next-date-btn');
-            btn.classList.remove('playing');
-            btn.textContent = '▶ Next Date';
+            const nextBtn = document.getElementById('next-date-btn');
+            const lastBtn = document.getElementById('last-date-btn');
+            nextBtn.classList.remove('playing');
+            nextBtn.textContent = 'Next Date ▶';
+            lastBtn.classList.remove('playing');
+            lastBtn.textContent = '◀ Last Date';
             if (playInterval) { clearInterval(playInterval); playInterval = null; }
         }
 
@@ -1419,12 +1454,16 @@
         }
 
         function highlightCounty(fips) {
-            if (highlightedLayer) countyLayer.resetStyle(highlightedLayer);
+            if (selectionOverlay) { map.removeLayer(selectionOverlay); selectionOverlay = null; }
+            if (highlightedLayer) { countyLayer.resetStyle(highlightedLayer); highlightedLayer = null; }
             countyLayer.eachLayer(layer => {
                 if (layer.feature.properties.fips === fips) {
-                    layer.setStyle({ weight: 4, color: '#d4a5a8', fillOpacity: 0.7 });
-                    layer.bringToFront();
+                    layer.setStyle({ fillOpacity: 0.7 });
                     highlightedLayer = layer;
+                    selectionOverlay = L.geoJSON(layer.feature, {
+                        style: { weight: 6, color: '#d4a5a8', fill: false },
+                        pane: 'selectionPane'
+                    }).addTo(map);
                 }
             });
         }
@@ -1441,6 +1480,7 @@
 
         function clearSelection() {
             document.getElementById('county-info-sidebar').style.display = 'none';
+            if (selectionOverlay) { map.removeLayer(selectionOverlay); selectionOverlay = null; }
             if (highlightedLayer) { countyLayer.resetStyle(highlightedLayer); highlightedLayer = null; }
             Plotly.purge('timeseries-container');
             showPlotPlaceholder();
@@ -1532,6 +1572,10 @@
         // Initialize Leaflet map
         const map = L.map('map').setView([41.5, -93.5], 5);
 
+        map.createPane('selectionPane');
+        map.getPane('selectionPane').style.pointerEvents = 'none';
+        map.getPane('selectionPane').style.zIndex = 450;
+
         map.on('dragstart', () => {
             isDragging = true;
             sharedTooltip.remove();   // kill the one that was open
@@ -1576,18 +1620,25 @@
             return { fillColor: getColor(value, p5, p95), weight: 1, opacity: 1, color: 'white', fillOpacity: 0.7 };
         }
 
+        let hoveredLayer = null;
+
         function highlightFeature(e) {
-            if (isDragging) return;
+            if (isDragging || isLoading) return;
             const layer = e.target;
+            if (hoveredLayer && hoveredLayer !== layer && hoveredLayer !== highlightedLayer) {
+                countyLayer.resetStyle(hoveredLayer);
+            }
+            hoveredLayer = layer;
             if (layer !== highlightedLayer) {
                 layer.setStyle({ weight: 3, color: '#666', fillOpacity: 0.9 });
                 layer.bringToFront();
             }
-            if (highlightedLayer) highlightedLayer.bringToFront(); 
         }
 
         function resetHighlight(e) {
+            if (isLoading) return;
             const layer = e.target;
+            hoveredLayer = null;
             if (layer !== highlightedLayer) countyLayer.resetStyle(layer);
         }
 
@@ -1601,10 +1652,12 @@
         const sharedTooltip = L.tooltip({ className: 'county-tooltip', direction: 'top' });
 
         function onEachFeature(feature, layer) {
-            const label = `${feature.properties.NAMELSAD}, ${feature.properties.STATE_NAME}`;
             layer.on({
                 mouseover: (e) => {
                     if (isDragging) return;
+                    let label = `${feature.properties.NAMELSAD}, ${feature.properties.STATE_NAME}`;
+                    const val = feature.properties.value;
+                    if (val != null && !isNaN(val)) label += `: ${parseFloat(val.toFixed(3))}`;
                     sharedTooltip.setContent(label).setLatLng(e.latlng).addTo(map);
                     highlightFeature(e);
                 },
@@ -1622,6 +1675,18 @@
                 geojsonData = data;
                 countyLayer = L.geoJSON(data, { style, onEachFeature }).addTo(map);
             });
+
+        function resetMapToGray() {
+            countyData = null;
+            hoveredLayer = null;
+            highlightedLayer = null;
+            if (countyLayer) map.removeLayer(countyLayer);
+            if (geojsonData) {
+                geojsonData.features.forEach(f => { f.properties.value = null; });
+                countyLayer = L.geoJSON(geojsonData, { style, onEachFeature }).addTo(map);
+            }
+            if (selectedFips && selectionOverlay) highlightCounty(selectedFips);
+        }
 
         async function updateMap() {
             const variable = document.getElementById('variable-select').value;
@@ -1657,11 +1722,12 @@
                 const text = await response.text();
                 const data = JSON.parse(text.replace(/:\s*NaN/g, ': null'));
 
-                if (data.length === 0) { showTemporaryMessage('No data available for this date', 'error', 3000); return; }
-                if (data.error) { showTemporaryMessage('Error: ' + data.error, 'error', 3000); return; }
+                if (data.length === 0) { resetMapToGray(); showTemporaryMessage('No data available for this date', 'error', 3000); return; }
+                if (data.error) { resetMapToGray(); showTemporaryMessage('Error: ' + data.error, 'error', 3000); return; }
 
                 countyData = data.map(item => ({ ...item, value: transformValue(variable, item.value) }));
                 updateMapColors(variable);
+                if (!countyData) return;
                 updateLegend(variable, countyData);
                 updateColormapPreview();
             } catch (error) {
@@ -1678,7 +1744,7 @@
             });
 
             const values = countyData.map(d => d.value).filter(v => v != null && !isNaN(v)).sort((a, b) => a - b);
-            if (values.length === 0) { alert('No valid data values found'); return; }
+            if (values.length === 0) { resetMapToGray(); showTemporaryMessage('No data available for this date', 'error', 3000); return; }
 
             let p5, p95;
             if (useDefaultRange) {
@@ -1891,6 +1957,7 @@
         }
 
         function showLoading(show, message = 'Loading data...', type = 'loading') {
+            isLoading = show && type === 'loading';
             const div = document.getElementById('loading');
             if (show) {
                 div.textContent = message;
@@ -1919,8 +1986,7 @@
         document.getElementById('clear-btn').addEventListener('click', clearSelection);
 
         document.getElementById('colormap-select').addEventListener('change', (e) => {
-            currentColorScheme = e.target.value;
-            updateColormapPreview();
+            updateColormapPreview(e.target.value);
         });
 
         document.getElementById('county-info-header').addEventListener('click', (e) => {
@@ -1928,22 +1994,34 @@
         });
 
         const nextDateBtn = document.getElementById('next-date-btn');
+        const lastDateBtn = document.getElementById('last-date-btn');
         let mouseDownTimer = null;
 
         nextDateBtn.addEventListener('click', (e) => {
             e.preventDefault();
             if (!isPlaying) advanceToNextDate(); else stopPlaying();
         });
-
         nextDateBtn.addEventListener('mousedown', () => {
-            mouseDownTimer = setTimeout(() => startPlaying(), 500);
+            mouseDownTimer = setTimeout(() => startPlaying('next'), 500);
         });
-
         nextDateBtn.addEventListener('mouseup', () => {
             if (mouseDownTimer) { clearTimeout(mouseDownTimer); mouseDownTimer = null; }
         });
-
         nextDateBtn.addEventListener('mouseleave', () => {
+            if (mouseDownTimer) { clearTimeout(mouseDownTimer); mouseDownTimer = null; }
+        });
+
+        lastDateBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (!isPlaying) advanceToLastDate(); else stopPlaying();
+        });
+        lastDateBtn.addEventListener('mousedown', () => {
+            mouseDownTimer = setTimeout(() => startPlaying('last'), 500);
+        });
+        lastDateBtn.addEventListener('mouseup', () => {
+            if (mouseDownTimer) { clearTimeout(mouseDownTimer); mouseDownTimer = null; }
+        });
+        lastDateBtn.addEventListener('mouseleave', () => {
             if (mouseDownTimer) { clearTimeout(mouseDownTimer); mouseDownTimer = null; }
         });
 
