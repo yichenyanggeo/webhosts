@@ -107,7 +107,7 @@
             margin-top: 48px;
             display: flex;
             flex-direction: column;
-            gap: 56px;
+            gap: 64px;
         }
 
         .dashboard-block {
@@ -126,10 +126,10 @@
         }
 
         .dashboard-header span {
-            font-size: 13px;
+            font-size: 17px;
             font-weight: 700;
             color: #a8d8b0;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
             text-transform: uppercase;
         }
 
@@ -151,6 +151,42 @@
 
         .fullscreen-btn:hover {
             background: rgba(255,255,255,0.22);
+        }
+
+        .collapse-dash-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px 6px;
+            margin-left: 10px;
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .collapse-dash-arrow {
+            width: 0;
+            height: 0;
+            border-left: 7px solid transparent;
+            border-right: 7px solid transparent;
+            border-top: 9px solid #a8d8b0;
+            transition: transform 0.3s;
+        }
+
+        .collapse-dash-btn[aria-expanded="false"] .collapse-dash-arrow {
+            transform: rotate(-90deg);
+        }
+
+        .dashboard-frame.dash-collapsed {
+            display: none;
+        }
+
+        .dashboard-block.dash-collapsed {
+            border-radius: 6px;
+        }
+
+        .dashboard-block.dash-collapsed .dashboard-header {
+            border-radius: 6px;
         }
 
         .dashboard-frame {
@@ -225,11 +261,23 @@
             margin-bottom: 0;
         }
 
-        /* ── Dashboard section (indented child group) ── */
+        /* ── Dashboard section (top-level, no indent) ── */
         .dashboard-section {
-            padding-left: 36px;
-            border-left: 2px solid rgba(45, 95, 63, 0.15);
             margin-top: 32px;
+        }
+
+        /* ── Groups each dashboard + its sub-banners ── */
+        .dashboard-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        /* ── Sub-banners indented under their dashboard ── */
+        .dashboard-subs {
+            padding-left: 28px;
+            border-left: 3px solid #2d5f3f;
+            margin-left: 4px;
         }
 
         /* ── Sub-banners below each dashboard ── */
@@ -390,52 +438,58 @@
             </div>
 
             <div class="dashboards dashboard-section">
-                <div class="dashboard-block">
-                    <div class="dashboard-header">
-                        <span>US Corn Belt Monitoring &amp; Yield Forecasting</span>
-                        <a class="fullscreen-btn" href="./webhost_dashboard_county_level.html?v=2" target="_blank">↗ Full Screen</a>
+                <div class="dashboard-group">
+                    <div class="dashboard-block">
+                        <div class="dashboard-header">
+                            <span>1. County-Level Dashboard</span>
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <a class="fullscreen-btn" href="./webhost_dashboard_county_level.html?v=2" target="_blank">↗ Full Screen</a>
+                                <button class="collapse-dash-btn" aria-expanded="true" onclick="toggleDash(this)" title="Collapse / Expand"><span class="collapse-dash-arrow"></span></button>
+                            </div>
+                        </div>
+                        <iframe class="dashboard-frame" src="./webhost_dashboard_county_level.html?v=2" loading="lazy" allowfullscreen></iframe>
                     </div>
-                    <iframe class="dashboard-frame" src="./webhost_dashboard_county_level.html?v=2" loading="lazy" allowfullscreen></iframe>
-                </div>
-
-                <button class="sub-toggle" onclick="toggleSub(this)" aria-expanded="false">
-                    <span>Data Sources</span>
-                    <span class="sub-arrow"></span>
-                </button>
-                <div class="sub-body" hidden>
-                    <p>Coming soon.</p>
-                </div>
-
-                <button class="sub-toggle" onclick="toggleSub(this)" aria-expanded="false">
-                    <span>How to Read This Dashboard</span>
-                    <span class="sub-arrow"></span>
-                </button>
-                <div class="sub-body" hidden>
-                    <p>Coming soon.</p>
-                </div>
-
-                <div class="dashboard-block">
-                    <div class="dashboard-header">
-                        <span>US National Corn Yield Forecasting</span>
-                        <a class="fullscreen-btn" href="./webhost_dashboard_national.html?v=2" target="_blank">↗ Full Screen</a>
+                    <div class="dashboard-subs">
+                        <button class="sub-toggle" onclick="toggleSub(this)" aria-expanded="false" data-src="./tutorial_county_dashboard.html">
+                            <span>How to Use This Dashboard</span>
+                            <span class="sub-arrow"></span>
+                        </button>
+                        <div class="sub-body" hidden></div>
+                        <button class="sub-toggle" onclick="toggleSub(this)" aria-expanded="false">
+                            <span>Data Sources and Methods</span>
+                            <span class="sub-arrow"></span>
+                        </button>
+                        <div class="sub-body" hidden>
+                            <p>Coming soon.</p>
+                        </div>
                     </div>
-                    <iframe class="dashboard-frame" src="./webhost_dashboard_national.html?v=2" loading="lazy" allowfullscreen></iframe>
                 </div>
 
-                <button class="sub-toggle" onclick="toggleSub(this)" aria-expanded="false">
-                    <span>Data Sources</span>
-                    <span class="sub-arrow"></span>
-                </button>
-                <div class="sub-body" hidden>
-                    <p>Coming soon.</p>
-                </div>
-
-                <button class="sub-toggle" onclick="toggleSub(this)" aria-expanded="false">
-                    <span>How to Read This Dashboard</span>
-                    <span class="sub-arrow"></span>
-                </button>
-                <div class="sub-body" hidden>
-                    <p>Coming soon.</p>
+                <div class="dashboard-group">
+                    <div class="dashboard-block">
+                        <div class="dashboard-header">
+                            <span>2. National-Level Dashboard</span>
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <a class="fullscreen-btn" href="./webhost_dashboard_national.html?v=2" target="_blank">↗ Full Screen</a>
+                                <button class="collapse-dash-btn" aria-expanded="true" onclick="toggleDash(this)" title="Collapse / Expand"><span class="collapse-dash-arrow"></span></button>
+                            </div>
+                        </div>
+                        <iframe class="dashboard-frame" src="./webhost_dashboard_national.html?v=2" loading="lazy" allowfullscreen></iframe>
+                    </div>
+                    <div class="dashboard-subs">
+                        <button class="sub-toggle" onclick="toggleSub(this)" aria-expanded="false">
+                            <span>Data Sources</span>
+                            <span class="sub-arrow"></span>
+                        </button>
+                        <div class="sub-body" hidden>
+                            <p>Coming soon.</p>
+                        </div>
+                        <button class="sub-toggle" onclick="toggleSub(this)" aria-expanded="false" data-src="./tutorial_national_dashboard.html">
+                            <span>How to Read This Dashboard</span>
+                            <span class="sub-arrow"></span>
+                        </button>
+                        <div class="sub-body" hidden></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -521,11 +575,28 @@
             body.hidden = expanded;
         }
 
+        function toggleDash(btn) {
+            const block = btn.closest('.dashboard-block');
+            const frame = block.querySelector('.dashboard-frame');
+            const expanded = btn.getAttribute('aria-expanded') === 'true';
+            btn.setAttribute('aria-expanded', !expanded);
+            frame.classList.toggle('dash-collapsed', expanded);
+            block.classList.toggle('dash-collapsed', expanded);
+        }
+
         function toggleSub(btn) {
             const body = btn.nextElementSibling;
             const expanded = btn.getAttribute('aria-expanded') === 'true';
             btn.setAttribute('aria-expanded', !expanded);
             body.hidden = expanded;
+            const src = btn.dataset.src;
+            if (!expanded && src && !body.dataset.loaded) {
+                body.innerHTML = '<p style="color:#7ea66d;padding:8px 0;">Loading...</p>';
+                fetch(src)
+                    .then(r => r.text())
+                    .then(html => { body.innerHTML = html; body.dataset.loaded = '1'; })
+                    .catch(() => { body.innerHTML = '<p>Could not load content.</p>'; });
+            }
         }
     </script>
 </body>
