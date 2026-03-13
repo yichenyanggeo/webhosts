@@ -455,12 +455,17 @@
                             <span class="sub-arrow"></span>
                         </button>
                         <div class="sub-body" hidden></div>
+                        <button class="sub-toggle" onclick="toggleSub(this)" aria-expanded="false" data-src="./usecases_county_dashboard.html">
+                            <span>Use Cases</span>
+                            <span class="sub-arrow"></span>
+                        </button>
+                        <div class="sub-body" hidden></div>
                         <button class="sub-toggle" onclick="toggleSub(this)" aria-expanded="false">
                             <span>Data Sources and Methods</span>
                             <span class="sub-arrow"></span>
                         </button>
                         <div class="sub-body" hidden>
-                            <p>Coming soon.</p>
+                            <p>For variable descriptions, available data coverage, and the latest methodological updates, visit the <a href="https://github.com/yichenyanggeo/us-cornbelt-monitoring-and-yield-forecasting" target="_blank" style="color:#2d5f3f;font-weight:600;text-decoration:none;border-bottom:1px solid rgba(45,95,63,0.3);">project on GitHub</a>.</p>
                         </div>
                     </div>
                 </div>
@@ -482,16 +487,29 @@
                             <span class="sub-arrow"></span>
                         </button>
                         <div class="sub-body" hidden>
-                            <p>Coming soon.</p>
+                            <p>For variable descriptions, available data coverage, and the latest yield prediction results, visit the <a href="https://github.com/yichenyanggeo/us-cornbelt-monitoring-and-yield-forecasting" target="_blank" style="color:#2d5f3f;font-weight:600;text-decoration:none;border-bottom:1px solid rgba(45,95,63,0.3);">project on GitHub</a>.</p>
                         </div>
-                        <button class="sub-toggle" onclick="toggleSub(this)" aria-expanded="false" data-src="./tutorial_national_dashboard.html">
-                            <span>How to Read This Dashboard</span>
-                            <span class="sub-arrow"></span>
-                        </button>
                         <div class="sub-body" hidden></div>
                     </div>
                 </div>
             </div>
+        </div>
+
+        <button class="why-toggle" onclick="toggleWhy(this)" aria-expanded="false">
+            <span class="why-label">A note on forecast use</span>
+            <span class="why-arrow"></span>
+        </button>
+        <div class="why-body" hidden>
+            <p>These forecasts are research outputs meant to support situational awareness. Forecast errors are inevitable, particularly in anomalous growing seasons. Users are strongly encouraged to interpret them alongside the satellite, weather, soil, and drought indicators available on the dashboard rather than in isolation. The author does not recommend forming financial, operational, or policy decisions from the content of these dashboards alone.</p>
+        </div>
+
+        <button class="why-toggle" onclick="toggleWhy(this)" aria-expanded="false" style="margin-top:20px;">
+            <span class="why-label">Help me improve</span>
+            <span class="why-arrow"></span>
+        </button>
+        <div class="why-body" hidden>
+            <p>If you encounter a functional issue with the dashboards or this repository, <a href="https://github.com/yichenyanggeo/us-cornbelt-monitoring-and-yield-forecasting/issues/new/choose" target="_blank" style="color:#2d5f3f;font-weight:600;text-decoration:none;border-bottom:1px solid rgba(45,95,63,0.3);">open an issue on GitHub</a>.</p>
+            <p>For suggestions on new dashboard features, additional variables to monitor, or new forecast methods, <a href="https://github.com/yichenyanggeo/us-cornbelt-monitoring-and-yield-forecasting/discussions/new/choose" target="_blank" style="color:#2d5f3f;font-weight:600;text-decoration:none;border-bottom:1px solid rgba(45,95,63,0.3);">start a discussion on GitHub</a>.</p>
         </div>
 
         <footer>

@@ -1,0 +1,85 @@
+<style>
+    .tut-step {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 36px;
+    }
+    .tut-step:last-child { margin-bottom: 0; }
+
+    .tut-step-label {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: #2d5f3f;
+    }
+
+    .tut-step h4 {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 17px;
+        font-weight: 700;
+        color: #1f4d34;
+        letter-spacing: -0.5px;
+        margin: 0;
+    }
+
+    .tut-step p {
+        font-family: 'Space Grotesk', sans-serif !important;
+        font-size: 15px !important;
+        line-height: 1.8 !important;
+        color: #3a4a42 !important;
+        margin: 0 !important;
+    }
+
+    .tut-step a {
+        color: #2d5f3f;
+        font-weight: 600;
+        text-decoration: none;
+        border-bottom: 1px solid rgba(45,95,63,0.3);
+        transition: border-color 0.2s;
+    }
+
+    .tut-step a:hover {
+        border-bottom-color: #2d5f3f;
+    }
+
+    .tut-step img {
+        width: 100%;
+        border-radius: 6px;
+        border: 1px solid rgba(45,95,63,0.15);
+        box-shadow: 0 2px 12px rgba(45,95,63,0.1);
+    }
+
+    .tut-divider {
+        height: 1px;
+        background: rgba(45,95,63,0.12);
+        margin: 8px 0 36px;
+    }
+</style>
+
+<!-- ── Step 1 ── -->
+<div class="tut-step">
+    <h4>Map Components</h4>
+    <p>Four simple steps to render the map: (1) select a variable from satellite vegetation indices, weather data, soil data, or drought indicators; (2) pick a date to inspect. Every 8 days is selectable; (3) choose a strong-contrast color palette; and (4) click <strong>Update Map</strong>. For the full variable list and descriptions, visit the <a href="https://github.com/yichenyanggeo/us-cornbelt-monitoring-and-yield-forecasting" target="_blank">project on GitHub</a>.</p>
+    <img src="https://assets.yichenyang.dev/webapps/Step_1.webp" alt="Map Components">
+</div>
+<div class="tut-divider"></div>
+
+<!-- ── Step 2 ── -->
+<div class="tut-step">
+    <h4>Time Series Components</h4>
+    <p>Three steps to pull up a time series: (1) select a county by clicking the map or searching by name, a county info panel will appear showing soil properties; (2) set a start and end date for the period of interest; and (3) click <strong>Update Plot</strong>. The chart displays the full record for your selected variable and county.</p>
+    <img src="https://assets.yichenyang.dev/webapps/Step_2.webp" alt="Time Series Components">
+</div>
+<div class="tut-divider"></div>
+
+<!-- ── Step 3 ── -->
+<div class="tut-step">
+    <h4>Additional Features</h4>
+    <p><strong>Historical Anomaly mode:</strong> when checked, the selected variable is compared against the same county and same time of year across all prior years, expressed as a percentile. A percentile above 80 indicates a strong positive anomaly this year; below 20 indicates a low anomaly; 40-60 is near-normal. When enabled, anomaly mode affects both the map and the time series plot on next update.</p>
+    <p style="margin-top: 12px !important;"><strong>Custom color range:</strong> by default, the map stretches colors between the 5th and 95th percentile of the current map data. Uncheck the auto-range box to set a custom min and max, pinning the color scale to a fixed range across dates for easier comparison.</p>
+    <p style="margin-top: 12px !important;"><strong>Date navigation:</strong> besides clicking Update Map, use the <strong>Last Date</strong> and <strong>Next Date</strong> buttons to step through maps at every 8-day cadence without re-opening the date picker.</p>
+    <p style="margin-top: 12px !important;"><strong>Plot window:</strong> click the thin bar at the top edge of the plot to collapse or expand it, freeing up screen space for the map. On the right side of the plot, a toggle button switches between a full chronological timeline and a year-over-year seasonal comparison view.</p>
+    <img src="https://assets.yichenyang.dev/webapps/Step_3.webp" alt="Additional Features">
+</div>
