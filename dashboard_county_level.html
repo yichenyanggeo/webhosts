@@ -1253,6 +1253,16 @@
             apiTimeSeries: 'https://5scuduu4gulimo7nnnnlz4e7li0bkywg.lambda-url.us-east-2.on.aws'
         };
 
+        const _cache = {};
+        async function cachedFetch(url) {
+            if (_cache[url]) return _cache[url];
+            const response = await fetch(url);
+            const text = await response.text();
+            const data = JSON.parse(text.replace(/:\s*NaN/g, ': null'));
+            if (!data.error && !(Array.isArray(data) && data.length === 0)) _cache[url] = data;
+            return data;
+        }
+
         const VARIABLE_DISPLAY_NAMES = {
             'NDVI_mean': 'NDVI',
             'NDWI_mean': 'NDWI',
@@ -1775,9 +1785,7 @@
 
             try {
                 const url = `${CONFIG.apiMapData}?var=${actualVariable}&date=${date}`;
-                const response = await fetch(url);
-                const text = await response.text();
-                const data = JSON.parse(text.replace(/:\s*NaN/g, ': null'));
+                const data = await cachedFetch(url);
 
                 if (data.length === 0) { resetMapToGray(); showTemporaryMessage('No data available for this date', 'error', 3000); return; }
                 if (data.error) { resetMapToGray(); showTemporaryMessage('Error: ' + data.error, 'error', 3000); return; }
@@ -1886,9 +1894,7 @@
 
             try {
                 const url = `${CONFIG.apiTimeSeries}?fips=${selectedFips}&var=${actualVariable}&start_date=${startDate}&end_date=${endDate}`;
-                const response = await fetch(url);
-                const text = await response.text();
-                const data = JSON.parse(text.replace(/:\s*NaN/g, ': null'));
+                const data = await cachedFetch(url);
 
                 if (data.error) { showTemporaryMessage('Error: ' + data.error, 'error', 3000); return; }
 
