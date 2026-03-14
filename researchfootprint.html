@@ -354,20 +354,20 @@
         </a>
         <nav>
             <a href="index.html#about">About Yichen</a>
-            <a href="webhost_researchfootprint.html" class="active">Research Footprints</a>
-            <a href="webhost_webapps.html">Web Tools</a>
+            <a href="researchfootprint.html" class="active">Research Footprints</a>
+            <a href="webapps.html">Web Tools</a>
         </nav>
         <section>
             <h2>Spatial Footprints of My Research Projects</h2>
             <div class="project-item" onclick="zoomToStudy('cornbelt')" title="Zoom to study area">
                 <span class="year">MAY 2025 – PRESENT</span>
-                <h3>US Corn Belt Monitoring & Yield Forecasting</h3>
-                <p>PhD side project for satellite data application in agriculture, Yale University &nbsp;·&nbsp;
-                    <strong><a onclick="event.stopPropagation(); openLink('./webhost_dashboard_county_level.html')"
-                            style="color:#2d5f3f;">[Corn Belt Monitor]</a></strong>
+                <h3>Open Corn Belt Intelligence</h3>
+                <p>PhD side project for satellite data application in agriculture, Yale University<br>
+                    <strong><a onclick="event.stopPropagation(); openLink('./dashboard_county_level.html')"
+                            style="color:#2d5f3f;">[US Corn Belt Monitoring &amp; Yield Forecasting]</a></strong>
                     &nbsp;&nbsp;
-                    <strong><a onclick="event.stopPropagation(); openLink('./webhost_dashboard_national.html')"
-                            style="color:#2d5f3f;">[National Yield Forecast]</a></strong>
+                    <strong><a onclick="event.stopPropagation(); openLink('./dashboard_national.html')"
+                            style="color:#2d5f3f;">[US National Corn Yield Forecasting]</a></strong>
                 </p>
             </div>
             <div class="project-item" onclick="zoomToStudy('nhcity')" title="Zoom to study area">
@@ -1748,7 +1748,7 @@
 
         function showCornBeltPanel() {
             document.getElementById('panelContent').innerHTML = `
-                <h2 style="font-size:20px;">US Corn Belt Monitoring & Yield Forecasting</h2>
+                <h2 style="font-size:20px;">Open Corn Belt Intelligence</h2>
                 <img src="https://assets.yichenyang.dev/research_footprints/uscornbeltmonitoring.webp"
                      style="width:100%;border-radius:6px;margin:16px 0;cursor:zoom-in;" onclick="openLightbox(this.src)" />
 <p>Corn yield forecasts move markets. Every year, substantial sums in commodity trades are made or lost in the weeks before USDA releases its official monthly estimates, and for most of that window, the public is flying blind. Large institutional players manage this uncertainty with proprietary forecast models built on satellite data, weather analytics, and their own internal data pipelines. Farmers, regional co-ops, and smaller traders have more limited access to this kind of intelligence, leaving them more passive in the market and often having to comply with price signals set by larger players.</p>
@@ -1757,8 +1757,8 @@
                 <br/>
                 <p><strong>Project:</strong> PhD side project for satellite data application in agriculture, Yale University</p>
                 <p><strong>Web Apps:</strong><br/>
-<a onclick="openLink('./webhost_dashboard_county_level.html')">US Corn Belt Monitoring & Yield Forecasting</a><br/>
-<a onclick="openLink('./webhost_dashboard_national.html')">US National Corn Yield Forecasting</a></p>
+<a onclick="openLink('./dashboard_county_level.html')">US Corn Belt Monitoring &amp; Yield Forecasting</a><br/>
+<a onclick="openLink('./dashboard_national.html')">US National Corn Yield Forecasting</a></p>
             `;
             const infoPanel = document.getElementById('infoPanel');
             infoPanel.classList.add('active');

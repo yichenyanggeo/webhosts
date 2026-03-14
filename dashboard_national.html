@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>US Corn Yield Forecasting - Backtest Results</title>
+    <title>US National Corn Yield Forecasting</title>
 
     <!-- Plotly -->
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
@@ -39,6 +39,9 @@
             padding: 18px 24px;
             box-shadow: 0 2px 8px rgba(26, 88, 71, 0.15);
             position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
         #header h1 {
@@ -46,6 +49,36 @@
             font-weight: 400;
             letter-spacing: -0.3px;
             margin: 0;
+        }
+
+        .header-nav {
+            display: flex;
+            gap: 10px;
+            flex-shrink: 0;
+            align-items: center;
+        }
+
+        .header-nav a {
+            color: rgba(255,255,255,0.85);
+            font-size: 15px;
+            font-weight: 500;
+            text-decoration: none;
+            letter-spacing: 0.2px;
+            white-space: nowrap;
+            transition: color 0.2s;
+        }
+
+        .header-nav a:hover {
+            color: #ffffff;
+        }
+
+        .header-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1.5px solid rgba(255,255,255,0.5);
+            display: block;
         }
 
         #main-container {
@@ -338,7 +371,11 @@
 
 <body>
     <div id="header">
-        <h1>US CORN YIELD FORECASTING</h1>
+        <h1>US NATIONAL CORN YIELD FORECASTING</h1>
+        <nav class="header-nav">
+            <a href="./index.html" target="_blank"><img class="header-avatar" src="https://assets.yichenyang.dev/selfie.webp" alt="Yichen Yang"></a>
+            <a href="./webapps.html#open-corn-belt-intelligence" target="_blank">About This Project</a>
+        </nav>
     </div>
 
     <div id="main-container">

@@ -61,7 +61,7 @@
 <!-- ── Step 1 ── -->
 <div class="tut-step">
     <h4>Map Components</h4>
-    <p>Four simple steps to render the map: (1) select a variable from satellite vegetation indices, weather data, soil data, or drought indicators; (2) pick a date to inspect. Every 8 days is selectable; (3) choose a strong-contrast color palette; and (4) click <strong>Update Map</strong>. For the full variable list and descriptions, visit the <a href="https://github.com/yichenyanggeo/us-cornbelt-monitoring-and-yield-forecasting" target="_blank">project on GitHub</a>.</p>
+    <p>Four simple steps to render the map: (1) select a variable from satellite vegetation indices, weather data, soil data, or drought indicators; (2) pick a date to inspect. Every 8 days is selectable; (3) choose a strong-contrast color palette; and (4) click <strong>Update Map</strong>.</p>
     <img src="https://assets.yichenyang.dev/webapps/Step_1.webp" alt="Map Components">
 </div>
 <div class="tut-divider"></div>
@@ -82,4 +82,26 @@
     <p style="margin-top: 12px !important;"><strong>Date navigation:</strong> besides clicking Update Map, use the <strong>Last Date</strong> and <strong>Next Date</strong> buttons to step through maps at every 8-day cadence without re-opening the date picker.</p>
     <p style="margin-top: 12px !important;"><strong>Plot window:</strong> click the thin bar at the top edge of the plot to collapse or expand it, freeing up screen space for the map. On the right side of the plot, a toggle button switches between a full chronological timeline and a year-over-year seasonal comparison view.</p>
     <img src="https://assets.yichenyang.dev/webapps/Step_3.webp" alt="Additional Features">
+</div>
+<div class="tut-divider"></div>
+
+<!-- ── Step 4 ── -->
+<div class="tut-step">
+    <h4>Guidance on Variable Selection</h4>
+
+    <p><strong>Is my crop healthy?</strong> Use the satellite vegetation indices. <strong>NDVI</strong> is the most basic greenness measure; higher values mean denser, greener canopy, good for tracking crop development over the season. <strong>EVI</strong> is a refined version that holds up better at peak canopy density and in hazy conditions. <strong>GCI (Green Chlorophyll Index)</strong> directly tracks the chlorophyll content of leaves and tends to catch early crop stress before it becomes visible. <strong>NDWI</strong> measures water held inside the plant canopy itself; a drop signals the crop is drying out, not just the soil beneath it. When in doubt about which variable to start with, begin with the vegetation indices. Weather, drought, and soil variables all capture conditions that may affect crops, but the satellite indices show the actual crop response — they are the CT scan of the field. They can also detect damage that weather data may miss entirely: a destructive wind gust, for example, may be missed from the coarse-resolution reanalysis weather data used here, but the physical damage to the canopy shows up in the very next satellite scan. Among the four indices, start with GCI. It is the most reliable for in-season monitoring, with less tendency to saturate under good growing conditions than NDVI.</p>
+
+    <p style="margin-top: 12px !important;"><strong>Is it too hot?</strong> Use the temperature variables. <strong>Daytime Land Surface Temperature</strong> shows the heat crops and soil are actually experiencing during daylight hours. <strong>Nighttime Land Surface Temperature</strong> matters because corn recovers overnight; if nights stay too warm, accumulated stress is not relieved. <strong>Max Air Temperature</strong> is the most critical weather threshold: corn sustains damage above roughly 35°C. <strong>Extreme Degree Days</strong> accumulates total heat exposure above 29°C across the whole summer; 29°C is a corn-specific threshold above which heat damage can significantly reduce yield potential.</p>
+
+    <p style="margin-top: 12px !important;"><strong>Is the atmosphere pulling water out of crops?</strong> Use <strong>Vapor Pressure Deficit (VPD)</strong>. VPD measures the atmosphere's "thirst": how strongly the air is pulling moisture from plants and soil. High VPD forces crops to close their pores to conserve water, halting photosynthesis even when soil moisture is adequate. High VPD is a key early indicator of drought stress, often rising before soil moisture deficits become apparent.</p>
+
+    <p style="margin-top: 12px !important;"><strong>Is there enough water in the soil?</strong> Use the soil moisture and water stress variables. <strong>Precipitation</strong> is self-explanatory. The four <strong>Soil Water Content</strong> layers go progressively deeper: the top layer (0–7 cm) responds quickly to rain and drying and matters most for germination; the 7–28 cm layer is where most corn roots are active in early summer; the 28–100 cm layer is accessed as the plant matures and a deficit here in July–August directly cuts yield; the deepest layer (100–289 cm) is a long-term reservoir whose deficit signals a multi-season drought. <strong>Water Stress (ET/PET)</strong> compares actual evaporation to what it would be with unlimited water; high values indicate good water conditions, and low values correspond with drought. <strong>Available Water Holding Capacity</strong> is a fixed soil property showing how much water the soil can store and supply to plants; counties with high values have a natural buffer against short dry spells.</p>
+
+    <p style="margin-top: 12px !important;"><strong>Is a drought developing?</strong> Use the drought indices. <strong>Palmer Drought Severity Index (PDSI)</strong> is a long-established index that accounts for both rainfall deficits and temperature; negative values mean drought. <strong>Soil Moisture Deficit Index (SMDI)</strong> compares current soil moisture to the long-term norm for that time of year and responds more quickly to short-term swings during the growing season.</p>
+
+    <p style="margin-top: 12px !important;"><strong>What is the soil like structurally?</strong> These variables do not change much from year to year. <strong>Soil Organic Matter</strong>, <strong>Cation Exchange Capacity (CEC)</strong>, and <strong>Nitrogen</strong> are soil nutrition indicators; higher values usually mean better conditions. Together they help explain why some counties consistently outperform their neighbors regardless of the season.</p>
+
+    <p style="margin-top: 12px !important;"><strong>What will yields be?</strong> <strong>Predicted Yield</strong> is the model's in-season estimate, updated every 8 days from early May through mid-November; track its trajectory across the season and compare counties. <strong>Reported Yield</strong> is the actual final yield from USDA after harvest, available for past years only; use it to validate what you saw in the monitoring data against what actually happened.</p>
+
+    <p style="margin-top: 12px !important;">For scientific descriptions of data sources and processing methods, visit the <a href="https://github.com/yichenyanggeo/us-cornbelt-monitoring-and-yield-forecasting" target="_blank">project on GitHub</a>.</p>
 </div>
