@@ -1490,6 +1490,22 @@
         populateDateDropdown();
         updateColormapPreview();
 
+        // Set default date from data_freshness.json (latest NDVI dekad)
+        (async () => {
+            try {
+                const freshness = await fetch('https://data.yichenyang.dev/Dashboards/county_level/data_freshness.json')
+                    .then(r => r.json());
+                const defaultDate = freshness.latest_ndvi_date.replace(/-/g, '');
+                const select = document.getElementById('date-select');
+                const match = Array.from(select.options).find(o => o.value === defaultDate);
+                if (match) {
+                    select.value = defaultDate;
+                    if (customDropdowns['date-select']) customDropdowns['date-select'].syncFromSelect();
+                }
+            } catch (e) { /* fall back to most recent date already set */ }
+            await updateMap();
+        })();
+
         // Next date / Last date / play
         let playInterval = null;
         let isPlaying = false;
