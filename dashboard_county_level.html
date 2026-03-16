@@ -1053,6 +1053,46 @@
         .custom-dropdown-panel::-webkit-scrollbar-thumb:hover {
             background: #1a5847;
         }
+
+        .var-hint-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: auto;
+            margin-right: 2px;
+            flex-shrink: 0;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: rgba(26,88,71,0.12);
+            color: #1a5847;
+            font-size: 16px;
+            font-weight: 400;
+            cursor: default;
+            line-height: 1;
+            transition: background 0.15s;
+            padding-bottom: 2px;
+        }
+
+        .var-hint-icon:hover {
+            background: rgba(26,88,71,0.25);
+        }
+
+        #var-hint-tooltip {
+            position: fixed;
+            z-index: 9999;
+            max-width: 280px;
+            background: rgba(26,88,71,0.97);
+            color: #fff;
+            font-size: 13px;
+            line-height: 1.6;
+            padding: 10px 13px;
+            border-radius: 7px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+            pointer-events: none;
+            display: none;
+            font-family: 'Roboto Condensed', sans-serif;
+        }
     </style>
 </head>
 
@@ -1235,6 +1275,9 @@
 
 
 
+    <!-- Variable hint tooltip -->
+    <div id="var-hint-tooltip"></div>
+
     <!-- Thin revive bar shown when plot is collapsed -->
     <div id="timeseries-revive-bar" onclick="expandTimeseriesPanel()">
         <svg viewBox="0 0 16 10" width="16" height="10">
@@ -1294,6 +1337,54 @@
             'nitrogen_0_100cm_mean': 'Nitrogen 0-100 cm (g/kg)',
             'EDD': 'Extreme Degree Days (°C·days)'
         };
+
+        const VARIABLE_HINTS = {
+            'NDVI_mean': 'Basic greenness measure. Higher = denser, greener canopy. Good for tracking crop development across the season, but can saturate under dense canopy.',
+            'NDWI_mean': 'Water held inside the plant canopy itself. A drop signals the crop is drying out.',
+            'EVI_mean': 'Refined vegetation index that holds up better than NDVI at peak canopy density and in hazy or smoky conditions.',
+            'GCI_mean': 'Directly tracks chlorophyll content of leaves. Best starting point for in-season monitoring. It catches early stress before it becomes visible, and is less prone to saturation than NDVI.',
+            'LST_Day_mean': 'Actual heat crops and soil experience during daylight hours, measured from satellite. More direct than air temperature for crop stress.',
+            'LST_Night_mean': 'Overnight temperatures matter because corn recovers at night. If nights stay too warm, accumulated heat stress is not relieved.',
+            'ppt': 'Mean daily precipitation over the 8-day period. Straightforward in meaning: rainfall amount on a daily scale.',
+            'tmean': 'Average air temperature over the 8-day period.',
+            'tmax': 'Maximum air temperature over the period. Use this to detect heat extremes above high thresholds during summer.',
+            'tmin': 'Minimum air temperature over the period. Useful for frost risk in spring and fall.',
+            'tdmean': 'Dew point temperature. Lower values mean drier air and higher evaporative demand on crops, and vice versa.',
+            'vpdmax': 'Peak atmospheric "thirst" over the period. High VPD forces crops to close their pores, halting photosynthesis even when soil moisture is adequate. A key early drought signal.',
+            'vpdmin': 'Minimum vapor pressure deficit over the period.',
+            'ET_mm': 'Water actually evaporated from soil and transpired by plants. Reflects real water use.',
+            'WS': 'Ratio of actual to potential evapotranspiration. Higher = better water conditions. Low values correspond with drought stress.',
+            'PDSI': 'Long-established drought index accounting for both rainfall deficits and temperature. Negative values indicate drought.',
+            'sm_layer1': 'Soil moisture in top 0–7 cm layer. Responds quickly to rain and drying. Most relevant for germination and early seedling establishment.',
+            'sm_layer2': 'Soil moisture in layer 7–28 cm. Where most corn roots are active in early summer.',
+            'sm_layer3': 'Soil moisture in layer 28–100 cm, a depth accessed as the plant matures. A deficit here in July–August directly cuts yield.',
+            'sm_layer4': 'Soil moisture in deepest layer 100–289 cm. Long-term water reservoir. A deficit here signals a multi-season drought.',
+            'smdi': 'Compares current soil moisture to the long-term average for this time of year. Responds more quickly to short-term swings than PDSI.',
+            'predicted_yield': 'In-season corn yield forecast by AI, updated every 8 days from early May through mid-November. Track its trajectory and compare counties across the season.',
+            'yield_bu_per_acre': 'Actual final yield from USDA after harvest. Available for past years only. Use it to validate what the monitoring data showed.',
+            'AWC_mean': 'How much water the soil can store and supply to plants. High values buffer against short dry spells. Year-to-year change is minimal; best used to compare counties spatially.',
+            'SOM_mean': 'A nutrition indicator. Higher generally means better growing conditions. Year-to-year change is minimal; best used to compare counties spatially.',
+            'CEC_mean': 'The soil\'s ability to hold nutrients available to plants. Higher = better. Year-to-year change is minimal; best used to compare counties spatially.',
+            'nitrogen_0_30cm_mean': 'Nitrogen in the top 30 cm. Nutrition indicator for the most active root zone. Year-to-year change is minimal; best used to compare counties spatially.',
+            'nitrogen_0_100cm_mean': 'Nitrogen availability through the full root depth. Year-to-year change is minimal; best used to compare counties spatially.',
+            'EDD': 'Cumulative heat exposure above 29°C across the whole summer. 29°C is a corn-specific threshold above which heat damage reduces yield potential significantly. Higher = more stress accumulated.'
+        };
+
+        const _hintTooltip = document.getElementById('var-hint-tooltip');
+        function showHint(el, text) {
+            _hintTooltip.textContent = text;
+            _hintTooltip.style.display = 'block';
+            const r = el.getBoundingClientRect();
+            const tt = _hintTooltip.getBoundingClientRect();
+            let left = r.right + 8;
+            let top = r.top + (r.height / 2) - (tt.height / 2);
+            if (left + tt.width > window.innerWidth - 8) left = r.left - tt.width - 8;
+            if (top < 8) top = 8;
+            if (top + tt.height > window.innerHeight - 8) top = window.innerHeight - tt.height - 8;
+            _hintTooltip.style.left = left + 'px';
+            _hintTooltip.style.top = top + 'px';
+        }
+        function hideHint() { _hintTooltip.style.display = 'none'; }
 
         const COLOR_SCHEMES = {
             'reds': ['#fee5d9', '#fcbba1', '#fc8d59', '#e34a33', '#b30000'],
@@ -2150,11 +2241,22 @@
                     if (groupLabel) html += `<div class="custom-dropdown-group-label">${groupLabel}</div>`;
                     groups[groupLabel].forEach(option => {
                         const isSel = option.value === this.selected;
-                        html += `<div class="custom-dropdown-item ${isSel ? 'selected' : ''}" data-value="${option.value}">
-                            ${isSel ? '<span class="check">✓</span>' : '<span class="check"></span>'}${option.text}</div>`;
+                        const hasHint = this.select.id === 'variable-select' && VARIABLE_HINTS[option.value];
+                        html += `<div class="custom-dropdown-item ${isSel ? 'selected' : ''}" data-value="${option.value}" style="display:flex;align-items:center;">
+                            ${isSel ? '<span class="check">✓</span>' : '<span class="check"></span>'}
+                            <span style="flex:1;overflow:hidden;text-overflow:ellipsis;">${option.text}</span>
+                            ${hasHint ? `<span class="var-hint-icon" data-hint="${option.value}">ℹ</span>` : ''}
+                        </div>`;
                     });
                 });
                 this.panel.innerHTML = html;
+                if (this.select.id === 'variable-select') {
+                    this.panel.querySelectorAll('.var-hint-icon').forEach(icon => {
+                        icon.addEventListener('mouseenter', (e) => { showHint(icon, VARIABLE_HINTS[icon.dataset.hint]); });
+                        icon.addEventListener('mouseleave', hideHint);
+                        icon.addEventListener('click', (e) => e.stopPropagation());
+                    });
+                }
             }
 
             updateButtonText() {
